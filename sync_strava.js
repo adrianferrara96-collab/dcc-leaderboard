@@ -1,5 +1,4 @@
 
-Copy
 
 // sync_strava.js
 const fs = require('fs');
