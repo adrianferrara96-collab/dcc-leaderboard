@@ -1,0 +1,34 @@
+name: Sync Strava Segment Times
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # runs every hour
+  workflow_dispatch:      # allows manual trigger from GitHub UI
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Run Strava sync
+        env:
+          STRAVA_CLIENT_ID: ${{ secrets.STRAVA_CLIENT_ID }}
+          STRAVA_CLIENT_SECRET: ${{ secrets.STRAVA_CLIENT_SECRET }}
+          STRAVA_REFRESH_TOKEN_FERRARA: ${{ secrets.STRAVA_REFRESH_TOKEN_FERRARA }}
+        run: node sync_strava.js
+
+      - name: Commit updated leaderboard
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add dcc_leaderboard_v4.html
+          git diff --staged --quiet || git commit -m "Auto-sync Strava times $(date -u '+%Y-%m-%d %H:%M UTC')"
+          git push
