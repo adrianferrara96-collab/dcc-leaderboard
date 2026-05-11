@@ -1,10 +1,13 @@
+
+Copy
+
 // sync_strava.js
 // Fetches segment times from Strava for each authorized rider
 // and patches SEGMENT_TIMES in dcc_leaderboard_v4.html
-
+ 
 const fs = require('fs');
 const https = require('https');
-
+ 
 // ─── CONFIG ──────────────────────────────────────────────────────────────────
 // Map rider display name → their refresh token env var
 const RIDERS = [
@@ -13,7 +16,7 @@ const RIDERS = [
   // { name: 'Miller',  refreshTokenEnv: 'STRAVA_REFRESH_TOKEN_MILLER' },
   // { name: 'Color',   refreshTokenEnv: 'STRAVA_REFRESH_TOKEN_COLOR' },
 ];
-
+ 
 // Segment name (must match HTML exactly) → Strava segment ID
 const SEGMENTS = {
   "Olinalá":                     1446208,
@@ -42,7 +45,7 @@ const SEGMENTS = {
   "Via Deportiva Loop":          25950502,
   "VP Climb":                    37538859,
 };
-
+ 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 function httpsGet(url, headers = {}) {
   return new Promise((resolve, reject) => {
@@ -57,7 +60,7 @@ function httpsGet(url, headers = {}) {
     req.on('error', reject);
   });
 }
-
+ 
 function httpsPost(url, body) {
   return new Promise((resolve, reject) => {
     const data = new URLSearchParams(body).toString();
@@ -78,7 +81,7 @@ function httpsPost(url, body) {
     req.end();
   });
 }
-
+ 
 // Format seconds → MM:SS or H:MM:SS
 function fmtTime(secs) {
   if (!secs) return '';
@@ -88,7 +91,7 @@ function fmtTime(secs) {
   if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
   return `${m}:${String(s).padStart(2,'0')}`;
 }
-
+ 
 // Get a fresh access token using the refresh token
 async function getAccessToken(refreshToken) {
   const res = await httpsPost('https://www.strava.com/oauth/token', {
@@ -100,7 +103,7 @@ async function getAccessToken(refreshToken) {
   if (!res.access_token) throw new Error('No access token: ' + JSON.stringify(res));
   return res.access_token;
 }
-
+ 
 // Get rider's best effort on a specific segment
 async function getSegmentEffort(accessToken, segmentId) {
   try {
@@ -115,15 +118,18 @@ async function getSegmentEffort(accessToken, segmentId) {
     return null;
   }
 }
-
+ 
 // ─── MAIN ────────────────────────────────────────────────────────────────────
 async function main() {
   console.log('Starting Strava sync...');
-
+ 
   // Load the HTML file
-  const htmlPath = 'dcc_leaderboard_v4.html';
+  const path = require('path');
+  const htmlPath = path.join(__dirname, 'dcc_leaderboard_v4.html');
+  console.log('Looking for HTML at:', htmlPath);
+  console.log('Files in dir:', require('fs').readdirSync(__dirname).join(', '));
   let html = fs.readFileSync(htmlPath, 'utf8');
-
+ 
   // Extract current SEGMENT_TIMES from HTML
   const match = html.match(/const SEGMENT_TIMES = ({[\s\S]*?});\s*\n/);
   if (!match) throw new Error('Could not find SEGMENT_TIMES in HTML');
@@ -134,7 +140,7 @@ async function main() {
   } catch(e) {
     throw new Error('Could not parse SEGMENT_TIMES: ' + e.message);
   }
-
+ 
   // Fetch times for each authorized rider
   for (const rider of RIDERS) {
     const refreshToken = process.env[rider.refreshTokenEnv];
@@ -142,7 +148,7 @@ async function main() {
       console.log(`Skipping ${rider.name} — no refresh token found`);
       continue;
     }
-
+ 
     console.log(`\nFetching times for ${rider.name}...`);
     let accessToken;
     try {
@@ -151,7 +157,7 @@ async function main() {
       console.error(`  Failed to get access token for ${rider.name}:`, e.message);
       continue;
     }
-
+ 
     for (const [segName, segId] of Object.entries(SEGMENTS)) {
       const secs = await getSegmentEffort(accessToken, segId);
       if (secs !== null) {
@@ -170,7 +176,7 @@ async function main() {
       await new Promise(r => setTimeout(r, 300));
     }
   }
-
+ 
   // Helper to convert MM:SS or H:MM:SS back to seconds for comparison
   function timeToSecs(t) {
     if (!t) return Infinity;
@@ -179,23 +185,23 @@ async function main() {
     if (p.length === 3) return p[0] * 3600 + p[1] * 60 + p[2];
     return Infinity;
   }
-
+ 
   // Serialize updated SEGMENT_TIMES back into HTML
   const newSegTimesStr = JSON.stringify(segTimes, null, 2);
   html = html.replace(
     /const SEGMENT_TIMES = {[\s\S]*?};\s*\n/,
     `const SEGMENT_TIMES = ${newSegTimesStr};\n`
   );
-
+ 
   // Update the "last updated" timestamp in the HTML
   const now = new Date().toLocaleString('en-US', { timeZone: 'America/Monterrey', dateStyle: 'medium', timeStyle: 'short' });
   html = html.replace(
     /Updated:.*?(?=<\/span>|')/,
     `Updated: ${now}`
   );
-
+ 
   fs.writeFileSync(htmlPath, html, 'utf8');
   console.log('\nDone! HTML updated successfully.');
 }
-
+ 
 main().catch(e => { console.error('Fatal error:', e); process.exit(1); });
