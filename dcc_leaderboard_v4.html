@@ -468,29 +468,230 @@ const RIDER_COLORS = {
 const TOTAL_SEGMENTS = 25;
 
 const SEGMENT_TIMES = {
-  "Olinalá": {"Miller":"15:39","Apo":"17:58","Dago":"18:16","Gera":"18:28","Color":"19:40","Angel":"19:46","Ferrara":"19:51","Diego":"20:00","Vega":"20:18","Ruiz":"20:22","Santi":"22:20","Pato":"23:17","Guzman":"24:05","Roco":"28:04"},
-  "Caseta - Meseta": {"Color":"21:02","Miller":"22:06","Apo":"23:01","Dago":"23:58","Gera":"24:11","Ferrara":"24:15","Diego":"25:27","Angel":"25:31","Ruiz":"25:53","Pato":"27:29","Vega":"28:33","Guzman":"31:15","Santi":"31:34","Pollo":"34:22","Roco":"35:54"},
-  "La bella Rosario": {"Miller":"13:34","Color":"15:39","Apo":"17:05","Angel":"17:36","Gera":"17:53","Ferrara":"18:42","Diego":"19:06","Ruiz":"20:17","Vega":"20:19","Pato":"20:50","Santi":"21:21","Roco":"24:18","Pollo":"25:22"},
-  'Escalada "La Virgen"': {"Miller":"38:26","Ferrara":"38:26","Color":"38:26","Diego":"40:29","Angel":"47:50"},
-  "al manzano": {"Miller":"50:41","Color":"52:37","Ferrara":"57:34","Diego":"1:01:06"},
-  "SA - Oyameles": {"Miller":"44:25","Color":"46:35","Angel":"46:58","Ferrara":"47:49","Gera":"50:16","Dago":"52:11","Apo":"53:59","Diego":"1:07:20"},
-  "Rio pilon al 26 (duro)": {"Ferrara":"40:02","Miller":"40:43","Diego":"47:03","Color":"48:08","Angel":"48:34"},
-  "Suchiate 2 duele más": {"Color":"2:48","Apo":"3:53","Dago":"3:57","Ferrara":"4:00","Pollo":"4:50","Diego":"5:04"},
-  "Rosario hasta topar": {"Apo":"3:31","Color":"4:16","Angel":"4:34","Gera":"5:02","Santi":"5:32","Diego":"6:04","Miller":"6:05","Guzman":"6:18","Roco":"6:50","Pollo":"7:33"},
-  "Los Andes": {"Miller":"4:14","Color":"5:15","Apo":"5:36","Angel":"5:38","Ferrara":"6:07","Gera":"6:08","Dago":"6:27","Diego":"6:37"},
-  "Mesa de las tablas": {"Miller":"13:44","Apo":"18:54","Gera":"18:55","Dago":"19:17","Color":"19:29","Angel":"19:57"},
-  "letrero dijo paco": {"Color":"6:55","Miller":"8:43","Apo":"9:09","Gera":"11:20"},
-  "Triple Summit": {"Miller":"1:14:19","Angel":"1:23:07","Gera":"1:31:05","Ferrara":"1:34:47","Apo":"1:35:25","Diego":"1:38:02","Ruiz":"1:44:14","Color":"1:46:40","Santi":"2:02:44"},
-  "way to the tooth": {"Color":"10:36","Ferrara":"11:01","Diego":"11:04","Miller":"11:08","Guzman":"11:11","Pollo":"12:14","Pato":"12:18","Santi":"12:19"},
-  "OXXO-Valle Alto": {"Color":"3:56","Ferrara":"4:20","Diego":"4:34","Gera":"4:50","Miller":"4:55","Pato":"5:28","Guzman":"5:33","Pollo":"5:43","Santi":"5:55"},
-  "Lateral Ida": {"Miller":"25:32","Dago":"26:05","Apo":"26:14","Diego":"27:07","Ferrara":"27:20","Color":"27:22","Gera":"28:50","Angel":"29:44","Guzman":"30:33","Vega":"32:28","Pato":"33:23","Santi":"34:43","Pollo":"40:26"},
-  "La Cortina climb": {"Miller":"1:09","Diego":"1:12"},
-  "Los encinos": {"Miller":"9:31","Diego":"9:55","Santi":"13:03"},
-  "Via Deportiva Loop": {"Dago":"22:04","Color":"23:29","Gera":"25:56","Ferrara":"27:04","Diego":"27:47","Pato":"27:49","Vega":"28:40","Miller":"31:48","Roco":"32:55"},
-  "VP Climb": {"Color":"23:31","Miller":"23:32","Apo":"23:39","Guzman":"24:00","Diego":"24:13"},
-  "Pto Genovevo": {"Color":"35:58","Miller":"37:32","Ferrara":"39:39","Angel":"41:53","Apo":"43:36","Diego":"43:56","Dago":"44:08","Vega":"45:42"},
+  "Olinalá": {
+    "Miller": "15:39",
+    "Apo": "17:58",
+    "Dago": "18:16",
+    "Gera": "18:28",
+    "Color": "19:40",
+    "Angel": "19:46",
+    "Ferrara": "15:11",
+    "Diego": "20:00",
+    "Vega": "20:18",
+    "Ruiz": "20:22",
+    "Santi": "22:20",
+    "Pato": "23:17",
+    "Guzman": "24:05",
+    "Roco": "28:04"
+  },
+  "Caseta - Meseta": {
+    "Color": "21:02",
+    "Miller": "22:06",
+    "Apo": "23:01",
+    "Dago": "23:58",
+    "Gera": "24:11",
+    "Ferrara": "19:25",
+    "Diego": "25:27",
+    "Angel": "25:31",
+    "Ruiz": "25:53",
+    "Pato": "27:29",
+    "Vega": "28:33",
+    "Guzman": "31:15",
+    "Santi": "31:34",
+    "Pollo": "34:22",
+    "Roco": "35:54"
+  },
+  "La bella Rosario": {
+    "Miller": "13:34",
+    "Color": "15:39",
+    "Apo": "17:05",
+    "Angel": "17:36",
+    "Gera": "17:53",
+    "Ferrara": "12:51",
+    "Diego": "19:06",
+    "Ruiz": "20:17",
+    "Vega": "20:19",
+    "Pato": "20:50",
+    "Santi": "21:21",
+    "Roco": "24:18",
+    "Pollo": "25:22"
+  },
+  "Escalada \"La Virgen\"": {
+    "Miller": "38:26",
+    "Ferrara": "37:29",
+    "Color": "38:26",
+    "Diego": "40:29",
+    "Angel": "47:50"
+  },
+  "al manzano": {
+    "Miller": "50:41",
+    "Color": "52:37",
+    "Ferrara": "52:07",
+    "Diego": "1:01:06"
+  },
+  "SA - Oyameles": {
+    "Miller": "44:25",
+    "Color": "46:35",
+    "Angel": "46:58",
+    "Ferrara": "43:46",
+    "Gera": "50:16",
+    "Dago": "52:11",
+    "Apo": "53:59",
+    "Diego": "1:07:20"
+  },
+  "Rio pilon al 26 (duro)": {
+    "Ferrara": "39:01",
+    "Miller": "40:43",
+    "Diego": "47:03",
+    "Color": "48:08",
+    "Angel": "48:34"
+  },
+  "Suchiate 2 duele más": {
+    "Color": "2:48",
+    "Apo": "3:53",
+    "Dago": "3:57",
+    "Ferrara": "2:05",
+    "Pollo": "4:50",
+    "Diego": "5:04"
+  },
+  "Rosario hasta topar": {
+    "Apo": "3:31",
+    "Color": "4:16",
+    "Angel": "4:34",
+    "Gera": "5:02",
+    "Santi": "5:32",
+    "Diego": "6:04",
+    "Miller": "6:05",
+    "Guzman": "6:18",
+    "Roco": "6:50",
+    "Pollo": "7:33",
+    "Ferrara": "3:43"
+  },
+  "Los Andes": {
+    "Miller": "4:14",
+    "Color": "5:15",
+    "Apo": "5:36",
+    "Angel": "5:38",
+    "Ferrara": "4:49",
+    "Gera": "6:08",
+    "Dago": "6:27",
+    "Diego": "6:37"
+  },
+  "Mesa de las tablas": {
+    "Miller": "13:44",
+    "Apo": "18:54",
+    "Gera": "18:55",
+    "Dago": "19:17",
+    "Color": "19:29",
+    "Angel": "19:57",
+    "Ferrara": "14:36"
+  },
+  "letrero dijo paco": {
+    "Color": "6:55",
+    "Miller": "8:43",
+    "Apo": "9:09",
+    "Gera": "11:20",
+    "Ferrara": "6:04"
+  },
+  "Triple Summit": {
+    "Miller": "1:14:19",
+    "Angel": "1:23:07",
+    "Gera": "1:31:05",
+    "Ferrara": "1:13:39",
+    "Apo": "1:35:25",
+    "Diego": "1:38:02",
+    "Ruiz": "1:44:14",
+    "Color": "1:46:40",
+    "Santi": "2:02:44"
+  },
+  "way to the tooth": {
+    "Color": "10:36",
+    "Ferrara": "8:54",
+    "Diego": "11:04",
+    "Miller": "11:08",
+    "Guzman": "11:11",
+    "Pollo": "12:14",
+    "Pato": "12:18",
+    "Santi": "12:19"
+  },
+  "OXXO-Valle Alto": {
+    "Color": "3:56",
+    "Ferrara": "3:46",
+    "Diego": "4:34",
+    "Gera": "4:50",
+    "Miller": "4:55",
+    "Pato": "5:28",
+    "Guzman": "5:33",
+    "Pollo": "5:43",
+    "Santi": "5:55"
+  },
+  "Lateral Ida": {
+    "Miller": "25:32",
+    "Dago": "26:05",
+    "Apo": "26:14",
+    "Diego": "27:07",
+    "Ferrara": "25:24",
+    "Color": "27:22",
+    "Gera": "28:50",
+    "Angel": "29:44",
+    "Guzman": "30:33",
+    "Vega": "32:28",
+    "Pato": "33:23",
+    "Santi": "34:43",
+    "Pollo": "40:26"
+  },
+  "La Cortina climb": {
+    "Miller": "1:09",
+    "Diego": "1:12",
+    "Ferrara": "1:13"
+  },
+  "Los encinos": {
+    "Miller": "9:31",
+    "Diego": "9:55",
+    "Santi": "13:03",
+    "Ferrara": "8:52"
+  },
+  "Via Deportiva Loop": {
+    "Dago": "22:04",
+    "Color": "23:29",
+    "Gera": "25:56",
+    "Ferrara": "20:52",
+    "Diego": "27:47",
+    "Pato": "27:49",
+    "Vega": "28:40",
+    "Miller": "31:48",
+    "Roco": "32:55"
+  },
+  "VP Climb": {
+    "Color": "23:31",
+    "Miller": "23:32",
+    "Apo": "23:39",
+    "Guzman": "24:00",
+    "Diego": "24:13"
+  },
+  "Pto Genovevo": {
+    "Color": "35:58",
+    "Miller": "37:32",
+    "Ferrara": "35:28",
+    "Angel": "41:53",
+    "Apo": "43:36",
+    "Diego": "43:56",
+    "Dago": "44:08",
+    "Vega": "45:42"
+  },
+  "Interminable": {
+    "Ferrara": "37:35"
+  },
+  "entronque hasta peñita": {
+    "Ferrara": "27:30"
+  },
+  "A Peñita subida": {
+    "Ferrara": "10:54"
+  },
+  "mexico 57 climb": {
+    "Ferrara": "9:36"
+  }
 };
-
 // Convert time string to total seconds
 function timeToSecs(t){
   if(!t) return 0;
@@ -541,7 +742,7 @@ async function fetchAndRender(){
   try{
     DATA=await readBin();
     if(!DATA.history?.length) DATA.history=JSON.parse(JSON.stringify(SEED_HISTORY));
-    document.getElementById('lastUpd').textContent=DATA.history?.length?'Updated: '+DATA.history[DATA.history.length-1].date:'Season loaded ✓';
+    document.getElementById('lastUpd').textContent=DATA.history?.length?'Updated: May 11, 2026, 6:00 PM'+DATA.history[DATA.history.length-1].date:'Season loaded ✓';
     renderAll();
   }catch(e){
     document.getElementById('standingsEl').innerHTML=`<div class="empty"><h3>Could not load</h3><p>${e.message}</p></div>`;
