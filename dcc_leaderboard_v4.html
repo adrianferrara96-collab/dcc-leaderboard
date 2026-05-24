@@ -742,7 +742,7 @@ async function fetchAndRender(){
   try{
     DATA=await readBin();
     if(!DATA.history?.length) DATA.history=JSON.parse(JSON.stringify(SEED_HISTORY));
-    document.getElementById('lastUpd').textContent=DATA.history?.length?'Updated: May 24, 2026, 12:14 PM'+DATA.history[DATA.history.length-1].date:'Season loaded ✓';
+    document.getElementById('lastUpd').textContent=DATA.history?.length?'Updated: May 24, 2026, 4:15 PM'+DATA.history[DATA.history.length-1].date:'Season loaded ✓';
     renderAll();
   }catch(e){
     document.getElementById('standingsEl').innerHTML=`<div class="empty"><h3>Could not load</h3><p>${e.message}</p></div>`;
