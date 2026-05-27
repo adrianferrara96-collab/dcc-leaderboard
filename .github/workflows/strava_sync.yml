@@ -2,7 +2,7 @@ name: Sync Strava Segment Times
 
 on:
   schedule:
-    - cron: '0 * * * *'  # runs every hour
+    - cron: '0 6 * * *'  # runs once daily at midnight Monterrey time (UTC-6)
   workflow_dispatch:      # allows manual trigger from GitHub UI
 
 jobs:
