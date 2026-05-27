@@ -1,29 +1,31 @@
-// sync_strava.js — fetches public segment leaderboards using a single token
+// sync_strava.js — fetches DCC club segment leaderboard filtered to 2026
 const fs = require('fs');
 const https = require('https');
 const path = require('path');
 
+const CLUB_ID = 692272;
+
 // ─── RIDERS ──────────────────────────────────────────────────────────────────
-// Map leaderboard nickname → Strava athlete ID
-const RIDERS = {
-  'Ferrara': 6473367,
-  'Miller':  124782521,
-  'Color':   13442859,
-  'Apo':     5482882,
-  'Dago':    21479063,
-  'Gera':    91881196,
-  'Angel':   72646417,
-  'Diego':   28527992,
-  'Vega':    18996879,
-  'Ruiz':    3298121,
-  'Pato':    43139000,
-  'Guzman':  19483319,
-  'Santi':   114879563,
-  'Pollo':   60414545,
-  'Roco':    55756167,
-  'David':   53404476,
-  'Zertuche':71425531,
-  'Aguirre': 33520233,
+// Map Strava athlete ID → leaderboard nickname
+const RIDER_IDS = {
+  6473367:   'Ferrara',
+  124782521: 'Miller',
+  13442859:  'Color',
+  5482882:   'Apo',
+  21479063:  'Dago',
+  91881196:  'Gera',
+  72646417:  'Angel',
+  28527992:  'Diego',
+  18996879:  'Vega',
+  3298121:   'Ruiz',
+  43139000:  'Pato',
+  19483319:  'Guzman',
+  114879563: 'Santi',
+  60414545:  'Pollo',
+  55756167:  'Roco',
+  53404476:  'David',
+  71425531:  'Zertuche',
+  33520233:  'Aguirre',
 };
 
 // ─── SEGMENTS ────────────────────────────────────────────────────────────────
@@ -62,7 +64,7 @@ function httpsGet(url, headers = {}) {
       let data = '';
       res.on('data', chunk => data += chunk);
       res.on('end', () => {
-        try { resolve(JSON.parse(data)); }
+        try { resolve({ status: res.statusCode, body: JSON.parse(data) }); }
         catch (e) { reject(new Error('JSON parse error: ' + data.slice(0, 200))); }
       });
     });
@@ -119,46 +121,33 @@ async function getAccessToken() {
   return res.access_token;
 }
 
-// Fetch ALL pages of a segment leaderboard and return map of athleteId → best elapsed_time
-async function getSegmentLeaderboard(accessToken, segmentId) {
-  const athleteTimes = {};
-  let page = 1;
-  while (true) {
-    const url = `https://www.strava.com/api/v3/segments/${segmentId}/leaderboard?per_page=200&page=${page}`;
-    let data;
-    try {
-      data = await httpsGet(url, { Authorization: `Bearer ${accessToken}` });
-    } catch (e) {
-      console.warn(`  Warning: could not fetch leaderboard for segment ${segmentId} page ${page}:`, e.message);
-      break;
-    }
+// Fetch DCC club leaderboard for a segment filtered to this year (2026)
+async function getClubSegmentLeaderboard(accessToken, segmentId) {
+  const url = `https://www.strava.com/api/v3/segments/${segmentId}/leaderboard?club_id=${CLUB_ID}&date_range=this_year&per_page=200`;
+  const { status, body } = await httpsGet(url, { Authorization: `Bearer ${accessToken}` });
 
-    if (!data.entries || data.entries.length === 0) break;
+  if (status === 404) { console.warn(`  Segment ${segmentId} not found`); return {}; }
+  if (status === 401) throw new Error('Unauthorized — token may be invalid');
+  if (status !== 200) { console.warn(`  HTTP ${status} for segment ${segmentId}`); return {}; }
+  if (!body.entries || body.entries.length === 0) return {};
 
-    for (const entry of data.entries) {
-      const id = entry.athlete_id;
-      const t  = entry.elapsed_time;
-      if (!athleteTimes[id] || t < athleteTimes[id]) {
-        athleteTimes[id] = t;
-      }
-    }
-
-    // Strava leaderboard caps at 10 pages (2000 entries) for public segments
-    if (data.entries.length < 200 || page >= 10) break;
-    page++;
-    await new Promise(r => setTimeout(r, 300));
+  // Build map of athleteId → best elapsed_time
+  const best = {};
+  for (const entry of body.entries) {
+    const id = entry.athlete_id;
+    const t  = entry.elapsed_time;
+    if (!best[id] || t < best[id]) best[id] = t;
   }
-  return athleteTimes;
+  return best;
 }
 
 // ─── MAIN ────────────────────────────────────────────────────────────────────
 async function main() {
-  console.log('Starting Strava sync (public leaderboard method)...');
+  console.log('Starting Strava sync (DCC club leaderboard, 2026 only)...');
 
   const htmlPath = path.join(__dirname, 'dcc_leaderboard_v4.html');
   let html = fs.readFileSync(htmlPath, 'utf8');
 
-  // Parse current SEGMENT_TIMES
   const match = html.match(/const SEGMENT_TIMES = ({[\s\S]*?});\s*\n/);
   if (!match) throw new Error('Could not find SEGMENT_TIMES in HTML');
   let segTimes;
@@ -168,49 +157,39 @@ async function main() {
     throw new Error('Could not parse SEGMENT_TIMES: ' + e.message);
   }
 
-  // Get single access token (Ferrara's)
+  // Clear all existing times — rebuild from 2026 data only
+  const freshTimes = {};
+
   console.log('Getting access token...');
   const accessToken = await getAccessToken();
-  console.log('Got access token ✓');
-
-  // Build reverse map: athleteId → nickname
-  const idToNickname = {};
-  for (const [nickname, id] of Object.entries(RIDERS)) {
-    idToNickname[id] = nickname;
-  }
+  console.log('Got access token ✓\n');
 
   let totalUpdates = 0;
 
-  // Fetch each segment leaderboard
   for (const [segName, segId] of Object.entries(SEGMENTS)) {
-    console.log(`\nFetching leaderboard for: ${segName}`);
-    const leaderboard = await getSegmentLeaderboard(accessToken, segId);
+    console.log(`Fetching: ${segName}`);
+    const leaderboard = await getClubSegmentLeaderboard(accessToken, segId);
 
-    if (!segTimes[segName]) segTimes[segName] = {};
+    if (!freshTimes[segName]) freshTimes[segName] = {};
 
     for (const [athleteIdStr, elapsedSecs] of Object.entries(leaderboard)) {
       const athleteId = parseInt(athleteIdStr);
-      const nickname = idToNickname[athleteId];
-      if (!nickname) continue; // not one of our riders
+      const nickname = RIDER_IDS[athleteId];
+      if (!nickname) continue; // not one of our tracked riders
 
       const timeStr = fmtTime(elapsedSecs);
-      const existing = segTimes[segName][nickname];
-
-      if (!existing || elapsedSecs < timeToSecs(existing)) {
-        console.log(`  ${nickname}: ${timeStr}${existing ? ' (improved from ' + existing + ')' : ' (new)'}`);
-        segTimes[segName][nickname] = timeStr;
-        totalUpdates++;
-      }
+      freshTimes[segName][nickname] = timeStr;
+      console.log(`  ✓ ${nickname}: ${timeStr}`);
+      totalUpdates++;
     }
 
-    // Respect Strava rate limits — 100 requests per 15 min
-    await new Promise(r => setTimeout(r, 500));
+    await new Promise(r => setTimeout(r, 400));
   }
 
-  console.log(`\nTotal time updates: ${totalUpdates}`);
+  console.log(`\nTotal entries found: ${totalUpdates}`);
 
-  // Write updated SEGMENT_TIMES back to HTML
-  const newSegTimesStr = JSON.stringify(segTimes, null, 2);
+  // Write fresh 2026-only times back to HTML
+  const newSegTimesStr = JSON.stringify(freshTimes, null, 2);
   html = html.replace(
     /const SEGMENT_TIMES = {[\s\S]*?};\s*\n/,
     `const SEGMENT_TIMES = ${newSegTimesStr};\n`
@@ -225,7 +204,7 @@ async function main() {
   html = html.replace(/Updated:.*?(?=<\/span>|'|<)/, `Updated: ${now}`);
 
   fs.writeFileSync(htmlPath, html, 'utf8');
-  console.log('\nDone! HTML updated successfully.');
+  console.log('Done! HTML updated successfully.');
 }
 
 main().catch(e => { console.error('Fatal error:', e); process.exit(1); });
