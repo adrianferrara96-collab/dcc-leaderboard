@@ -14,7 +14,7 @@ jobs:
         with:
           node-version: '20'
       - name: Run Strava sync
-env:
+        env:
           STRAVA_CLIENT_ID: ${{ secrets.STRAVA_CLIENT_ID }}
           STRAVA_CLIENT_SECRET: ${{ secrets.STRAVA_CLIENT_SECRET }}
           STRAVA_REFRESH_TOKEN_FERRARA: ${{ secrets.STRAVA_REFRESH_TOKEN_FERRARA }}
