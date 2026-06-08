@@ -3,30 +3,21 @@ on:
   schedule:
     - cron: '0 6 * * *'  # runs once daily at midnight Monterrey time (UTC-6)
   workflow_dispatch:      # allows manual trigger from GitHub UI
-
 jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
-
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-
       - name: Run Strava sync
         env:
           STRAVA_CLIENT_ID: ${{ secrets.STRAVA_CLIENT_ID }}
           STRAVA_CLIENT_SECRET: ${{ secrets.STRAVA_CLIENT_SECRET }}
           STRAVA_REFRESH_TOKEN_FERRARA: ${{ secrets.STRAVA_REFRESH_TOKEN_FERRARA }}
+          STRAVA_REFRESH_TOKEN_MILLER: ${{ secrets.STRAVA_REFRESH_TOKEN_MILLER }}
+          JSONBIN_MASTER_KEY: ${{ secrets.JSONBIN_MASTER_KEY }}
         run: node sync_strava.js
-
-      - name: Commit updated leaderboard
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add dcc_leaderboard_v4.html
-          git diff --staged --quiet || git commit -m "Auto-sync Strava times $(date -u '+%Y-%m-%d %H:%M UTC')"
-          git push
