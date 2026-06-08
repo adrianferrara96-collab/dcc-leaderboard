@@ -1,62 +1,61 @@
-// sync_strava.js — fetches each rider's segment efforts filtered to 2026
-const fs = require('fs');
+// sync_strava.js — multi-rider OAuth, 2026 efforts only, pushes to JSONBin
 const https = require('https');
-const path = require('path');
 
-// ─── RIDERS ──────────────────────────────────────────────────────────────────
-const RIDERS = {
-  'Ferrara': 6473367,
-  'Miller':  124782521,
-  'Color':   13442859,
-  'Apo':     5482882,
-  'Dago':    21479063,
-  'Gera':    91881196,
-  'Angel':   72646417,
-  'Diego':   28527992,
-  'Vega':    18996879,
-  'Ruiz':    3298121,
-  'Pato':    43139000,
-  'Guzman':  19483319,
-  'Santi':   114879563,
-  'Pollo':   60414545,
-  'Roco':    55756167,
-  'David':   53404476,
-  'Zertuche':71425531,
-  'Aguirre': 33520233,
-};
+// ─── RIDERS WITH TOKENS ───────────────────────────────────────────────────────
+// Add each rider's GitHub Secret env var name here as tokens come in.
+// If a rider has no token yet, set it to null — they'll be skipped.
+const RIDERS = [
+  { name: 'Ferrara', envToken: 'STRAVA_REFRESH_TOKEN_FERRARA' },
+  { name: 'Miller',  envToken: 'STRAVA_REFRESH_TOKEN_MILLER'  },
+  // Add more as tokens arrive:
+  // { name: 'Color',   envToken: 'STRAVA_REFRESH_TOKEN_COLOR'   },
+  // { name: 'Diego',   envToken: 'STRAVA_REFRESH_TOKEN_DIEGO'   },
+  // { name: 'Apo',     envToken: 'STRAVA_REFRESH_TOKEN_APO'     },
+  // { name: 'Gera',    envToken: 'STRAVA_REFRESH_TOKEN_GERA'    },
+  // { name: 'Dago',    envToken: 'STRAVA_REFRESH_TOKEN_DAGO'    },
+  // { name: 'Guzman',  envToken: 'STRAVA_REFRESH_TOKEN_GUZMAN'  },
+  // { name: 'Vega',    envToken: 'STRAVA_REFRESH_TOKEN_VEGA'    },
+  // { name: 'Aguirre', envToken: 'STRAVA_REFRESH_TOKEN_AGUIRRE' },
+];
 
 // ─── SEGMENTS ────────────────────────────────────────────────────────────────
-const SEGMENTS = {
-  "Olinalá":                    1446208,
-  "Caseta - Meseta":            3747852,
-  "La bella Rosario":           14609872,
-  'Escalada "La Virgen"':       2398953,
-  "Pto Genovevo":               968817,
-  "al manzano":                 16917155,
-  "SA - Oyameles":              27456010,
-  "Interminable":               15371816,
-  "entronque hasta peñita":     10356906,
-  "A Peñita subida":            8885334,
-  "Rio pilon al 26 (duro)":     10134690,
-  "Suchiate 2 duele más":       11399480,
-  "Rosario hasta topar":        34653257,
-  "Los Andes":                  8794764,
-  "Mesa de las tablas":         9697356,
-  "letrero dijo paco":          14147860,
-  "mexico 57 climb":            3299743,
-  "Triple Summit":              36428932,
-  "way to the tooth":           13328149,
-  "OXXO-Valle Alto":            10015610,
-  "Lateral Ida":                12259517,
-  "La Cortina climb":           8148112,
-  "Los encinos":                9488733,
-  "Via Deportiva Loop":         25950502,
-  "VP Climb":                   37538859,
-};
+const SEGMENTS = [
+  { name: "Olinalá",                  id: 1446208,   weight: 1.1, tier: "King" },
+  { name: "Caseta - Meseta",          id: 3747852,   weight: 1.0, tier: "1"    },
+  { name: "La bella Rosario",         id: 14609872,  weight: 1.0, tier: "1"    },
+  { name: 'Escalada "La Virgen"',     id: 2398953,   weight: 1.0, tier: "1"    },
+  { name: "Pto Genovevo",             id: 968817,    weight: 1.0, tier: "1"    },
+  { name: "al manzano",               id: 16917155,  weight: 0.9, tier: "2"    },
+  { name: "SA - Oyameles",            id: 27456010,  weight: 1.0, tier: "1"    },
+  { name: "Interminable",             id: 15371816,  weight: 0.9, tier: "2"    },
+  { name: "entronque hasta peñita",   id: 10356906,  weight: 0.7, tier: "4"    },
+  { name: "A Peñita subida",          id: 8885334,   weight: 0.7, tier: "4"    },
+  { name: "Rio pilon al 26 (duro)",   id: 10134690,  weight: 0.9, tier: "2"    },
+  { name: "Suchiate 2 duele más",     id: 11399480,  weight: 0.8, tier: "3"    },
+  { name: "Rosario hasta topar",      id: 34653257,  weight: 0.8, tier: "3"    },
+  { name: "Los Andes",                id: 8794764,   weight: 0.8, tier: "3"    },
+  { name: "Mesa de las tablas",       id: 9697356,   weight: 0.8, tier: "3"    },
+  { name: "letrero dijo paco",        id: 14147860,  weight: 0.8, tier: "3"    },
+  { name: "mexico 57 climb",          id: 3299743,   weight: 0.8, tier: "3"    },
+  { name: "Triple Summit",            id: 36428932,  weight: 0.7, tier: "4"    },
+  { name: "way to the tooth",         id: 13328149,  weight: 0.7, tier: "4"    },
+  { name: "OXXO-Valle Alto",          id: 10015610,  weight: 0.7, tier: "4"    },
+  { name: "Lateral Ida",              id: 12259517,  weight: 0.8, tier: "3"    },
+  { name: "La Cortina climb",         id: 8148112,   weight: 0.8, tier: "3"    },
+  { name: "Los encinos",              id: 9488733,   weight: 0.7, tier: "4"    },
+  { name: "Via Deportiva Loop",       id: 25950502,  weight: 0.8, tier: "3"    },
+  { name: "VP Climb",                 id: 37538859,  weight: 0.8, tier: "3"    },
+];
 
-// 2026 date range
-const START_DATE = '2026-01-01T00:00:00Z';
-const END_DATE   = '2026-12-31T23:59:59Z';
+const PTS_TABLE = [30, 27, 24, 22, 20, 18, 16, 14, 12, 10, 8, 7, 6, 5, 4, 3, 2, 1];
+
+// ─── CONFIG ───────────────────────────────────────────────────────────────────
+const JSONBIN_BIN_ID    = '69fd24f0250b1311c31bd7ec';
+const JSONBIN_MASTER_KEY = process.env.JSONBIN_MASTER_KEY;
+const CLIENT_ID         = process.env.STRAVA_CLIENT_ID;
+const CLIENT_SECRET     = process.env.STRAVA_CLIENT_SECRET;
+const START_DATE        = '2026-01-01T00:00:00Z';
+const END_DATE          = '2026-12-31T23:59:59Z';
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 function httpsGet(url, headers = {}) {
@@ -78,7 +77,10 @@ function httpsPost(url, body) {
     const data = new URLSearchParams(body).toString();
     const options = {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Content-Length': Buffer.byteLength(data) },
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Length': Buffer.byteLength(data)
+      },
     };
     const req = https.request(url, options, res => {
       let out = '';
@@ -94,13 +96,41 @@ function httpsPost(url, body) {
   });
 }
 
+function httpsPut(url, headers, body) {
+  return new Promise((resolve, reject) => {
+    const data = JSON.stringify(body);
+    const urlObj = new URL(url);
+    const options = {
+      hostname: urlObj.hostname,
+      path: urlObj.pathname,
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(data),
+        ...headers
+      },
+    };
+    const req = https.request(options, res => {
+      let out = '';
+      res.on('data', chunk => out += chunk);
+      res.on('end', () => {
+        try { resolve({ status: res.statusCode, body: JSON.parse(out) }); }
+        catch (e) { reject(new Error('JSON parse error: ' + out.slice(0, 200))); }
+      });
+    });
+    req.on('error', reject);
+    req.write(data);
+    req.end();
+  });
+}
+
 function fmtTime(secs) {
   if (!secs) return '';
   const h = Math.floor(secs / 3600);
   const m = Math.floor((secs % 3600) / 60);
   const s = secs % 60;
-  if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-  return `${m}:${String(s).padStart(2,'0')}`;
+  if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  return `${m}:${String(s).padStart(2, '0')}`;
 }
 
 function timeToSecs(t) {
@@ -111,113 +141,253 @@ function timeToSecs(t) {
   return Infinity;
 }
 
-async function getAccessToken() {
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ─── STRAVA AUTH ──────────────────────────────────────────────────────────────
+async function getAccessToken(refreshToken) {
   const res = await httpsPost('https://www.strava.com/oauth/token', {
-    client_id:     process.env.STRAVA_CLIENT_ID,
-    client_secret: process.env.STRAVA_CLIENT_SECRET,
-    refresh_token: process.env.STRAVA_REFRESH_TOKEN_FERRARA,
+    client_id:     CLIENT_ID,
+    client_secret: CLIENT_SECRET,
+    refresh_token: refreshToken,
     grant_type:    'refresh_token',
   });
   if (!res.access_token) throw new Error('No access token: ' + JSON.stringify(res));
   return res.access_token;
 }
 
-// Fetch best 2026 effort for a specific athlete on a specific segment
-async function getBestEffort2026(accessToken, athleteId, segmentId) {
-  const url = `https://www.strava.com/api/v3/segment_efforts?segment_id=${segmentId}&athlete_id=${athleteId}&start_date_local=${START_DATE}&end_date_local=${END_DATE}&per_page=10`;
+// ─── FETCH BEST 2026 EFFORT FOR A RIDER ON A SEGMENT ─────────────────────────
+async function getBestEffort(accessToken, segmentId) {
+  const url = `https://www.strava.com/api/v3/segment_efforts?segment_id=${segmentId}&start_date_local=${START_DATE}&end_date_local=${END_DATE}&per_page=10`;
   const { status, body } = await httpsGet(url, { Authorization: `Bearer ${accessToken}` });
 
   if (status === 404) return null;
   if (status === 401) throw new Error('Unauthorized — token may be invalid');
-  if (status === 429) throw new Error('Rate limited — too many requests');
+  if (status === 429) throw new Error('RATE_LIMITED');
   if (status !== 200) {
-    console.warn(`    HTTP ${status} for athlete ${athleteId} segment ${segmentId}`);
+    console.warn(`    HTTP ${status} for segment ${segmentId}`);
     return null;
   }
 
   if (!Array.isArray(body) || body.length === 0) return null;
 
-  // Return fastest effort in 2026
+  // Return fastest effort
   body.sort((a, b) => a.elapsed_time - b.elapsed_time);
   return body[0].elapsed_time;
 }
 
+// ─── JSONBIN ──────────────────────────────────────────────────────────────────
+async function readJSONBin() {
+  const { status, body } = await httpsGet(
+    `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`,
+    { 'X-Master-Key': JSONBIN_MASTER_KEY }
+  );
+  if (status !== 200) throw new Error(`JSONBin read failed: ${status}`);
+  return body.record;
+}
+
+async function writeJSONBin(data) {
+  const { status } = await httpsPut(
+    `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`,
+    { 'X-Master-Key': JSONBIN_MASTER_KEY },
+    data
+  );
+  if (status !== 200) throw new Error(`JSONBin write failed: ${status}`);
+}
+
+// ─── POINTS CALCULATION ───────────────────────────────────────────────────────
+function calcScores(segmentTimes) {
+  // segmentTimes: { segName: { riderName: "M:SS", ... }, ... }
+  const scores = {};
+
+  for (const seg of SEGMENTS) {
+    const timesForSeg = segmentTimes[seg.name] || {};
+    const entries = Object.entries(timesForSeg)
+      .map(([rider, time]) => ({ rider, secs: timeToSecs(time) }))
+      .filter(e => e.secs !== Infinity)
+      .sort((a, b) => a.secs - b.secs);
+
+    if (entries.length === 0) continue;
+
+    let rank = 1;
+    entries.forEach((e, i) => {
+      if (i > 0 && e.secs > entries[i - 1].secs) rank = i + 1;
+      const basePts = PTS_TABLE[rank - 1] || 1;
+      const pts = Math.round(basePts * seg.weight * 10) / 10;
+      if (!scores[e.rider]) scores[e.rider] = {};
+      scores[e.rider][seg.name] = pts;
+    });
+  }
+
+  return scores;
+}
+
 // ─── MAIN ────────────────────────────────────────────────────────────────────
 async function main() {
-  console.log('Starting Strava sync (2026 efforts per athlete)...');
+  console.log('=== DCC Strava Sync ===');
+  console.log(`Riders to sync: ${RIDERS.map(r => r.name).join(', ')}\n`);
 
-  const htmlPath = path.join(__dirname, 'dcc_leaderboard_v4.html');
-  let html = fs.readFileSync(htmlPath, 'utf8');
+  // Validate env vars
+  if (!JSONBIN_MASTER_KEY) throw new Error('JSONBIN_MASTER_KEY secret not set');
+  if (!CLIENT_ID) throw new Error('STRAVA_CLIENT_ID secret not set');
+  if (!CLIENT_SECRET) throw new Error('STRAVA_CLIENT_SECRET secret not set');
 
-  const match = html.match(/const SEGMENT_TIMES = ({[\s\S]*?});\s*\n/);
-  if (!match) throw new Error('Could not find SEGMENT_TIMES in HTML');
+  // Read current data from JSONBin
+  console.log('Reading current data from JSONBin...');
+  const currentData = await readJSONBin();
+  const currentScores = currentData.scores || {};
+  const currentHistory = currentData.history || [];
 
-  // Start fresh — 2026 only, no stale data
-  const freshTimes = {};
-  let totalFound = 0;
+  // segmentTimes: carry over times from ALL riders (including those without tokens)
+  // We only overwrite times for riders who have tokens — others stay as-is
+  const segmentTimes = {};
+  for (const seg of SEGMENTS) segmentTimes[seg.name] = {};
+
+  // Pre-populate existing times from currentData if available
+  if (currentData.segmentTimes) {
+    for (const seg of SEGMENTS) {
+      segmentTimes[seg.name] = { ...(currentData.segmentTimes[seg.name] || {}) };
+    }
+  }
+
   let requestCount = 0;
 
-  console.log('Getting access token...');
-  const accessToken = await getAccessToken();
-  console.log('Got access token ✓\n');
+  // ── Fetch times for each rider with a token ──
+  for (const rider of RIDERS) {
+    const refreshToken = process.env[rider.envToken];
+    if (!refreshToken) {
+      console.log(`⚠ Skipping ${rider.name} — no token found (${rider.envToken})`);
+      continue;
+    }
 
-  for (const [nickname, athleteId] of Object.entries(RIDERS)) {
-    console.log(`\n${nickname} (${athleteId}):`);
+    console.log(`\n── ${rider.name} ──`);
+    let accessToken;
+    try {
+      accessToken = await getAccessToken(refreshToken);
+      console.log('  Got access token ✓');
+    } catch (e) {
+      console.error(`  Failed to get token for ${rider.name}:`, e.message);
+      continue;
+    }
 
-    for (const [segName, segId] of Object.entries(SEGMENTS)) {
+    for (const seg of SEGMENTS) {
       requestCount++;
 
       // Pause every 80 requests to respect rate limits
       if (requestCount % 80 === 0) {
         console.log('  Pausing 60s for rate limit...');
-        await new Promise(r => setTimeout(r, 60000));
+        await sleep(60000);
       }
 
       let secs;
       try {
-        secs = await getBestEffort2026(accessToken, athleteId, segId);
-      } catch(e) {
-        if (e.message.includes('Rate limited')) {
+        secs = await getBestEffort(accessToken, seg.id);
+      } catch (e) {
+        if (e.message === 'RATE_LIMITED') {
           console.log('  Rate limited — pausing 60s...');
-          await new Promise(r => setTimeout(r, 60000));
-          secs = await getBestEffort2026(accessToken, athleteId, segId);
+          await sleep(60000);
+          try { secs = await getBestEffort(accessToken, seg.id); }
+          catch (e2) { console.error(`  Still failing on ${seg.name}:`, e2.message); continue; }
         } else {
-          console.error(`  Error on ${segName}:`, e.message);
+          console.error(`  Error on ${seg.name}:`, e.message);
           continue;
         }
       }
 
-      if (secs !== null) {
+      if (secs !== null && secs !== undefined) {
         const timeStr = fmtTime(secs);
-        if (!freshTimes[segName]) freshTimes[segName] = {};
-        freshTimes[segName][nickname] = timeStr;
-        console.log(`  ✓ ${segName}: ${timeStr}`);
-        totalFound++;
+        segmentTimes[seg.name][rider.name] = timeStr;
+        console.log(`  ✓ ${seg.name}: ${timeStr}`);
       }
 
-      await new Promise(r => setTimeout(r, 350));
+      await sleep(350);
     }
   }
 
-  console.log(`\nTotal 2026 efforts found: ${totalFound}`);
+  // ── Recalculate ALL scores from segment times ──
+  console.log('\nRecalculating scores...');
+  const newScores = calcScores(segmentTimes);
 
-  // Write fresh times to HTML
-  const newSegTimesStr = JSON.stringify(freshTimes, null, 2);
-  let updatedHtml = html.replace(
-    /const SEGMENT_TIMES = {[\s\S]*?};\s*\n/,
-    `const SEGMENT_TIMES = ${newSegTimesStr};\n`
-  );
+  // Merge: keep scores for riders without tokens, overwrite for those with tokens
+  const mergedScores = { ...currentScores };
+  for (const rider of RIDERS) {
+    if (!process.env[rider.envToken]) continue;
+    // Initialize all segments to 0 first
+    mergedScores[rider.name] = {};
+    for (const seg of SEGMENTS) {
+      mergedScores[rider.name][seg.name] = newScores[rider.name]?.[seg.name] || 0;
+    }
+  }
 
-  // Update timestamp
-  const now = new Date().toLocaleString('en-US', {
-    timeZone: 'America/Monterrey',
-    dateStyle: 'medium',
-    timeStyle: 'short'
-  });
-  updatedHtml = updatedHtml.replace(/Updated:.*?(?=<\/span>|'|<)/, `Updated: ${now}`);
+  // ── Detect changes ──
+  const changes = [];
+  for (const rider of RIDERS) {
+    if (!process.env[rider.envToken]) continue;
+    const oldPts = Object.values(currentScores[rider.name] || {}).reduce((a, b) => a + b, 0);
+    const newPts = Object.values(mergedScores[rider.name] || {}).reduce((a, b) => a + b, 0);
+    const diff = Math.round((newPts - oldPts) * 10) / 10;
+    if (diff !== 0) {
+      changes.push({ name: rider.name, d: diff });
+      console.log(`  ${rider.name}: ${diff > 0 ? '+' : ''}${diff} pts`);
+    } else {
+      console.log(`  ${rider.name}: no change`);
+    }
+  }
 
-  fs.writeFileSync(htmlPath, updatedHtml, 'utf8');
-  console.log('Done! HTML updated successfully.');
+  // ── Build history entry (only if something changed) ──
+  let newHistory = [...currentHistory];
+  if (changes.length > 0) {
+    const now = new Date().toLocaleString('en-US', {
+      timeZone: 'America/Monterrey',
+      month: 'short', day: 'numeric', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    });
+
+    const before = Object.entries(currentScores).map(([name, segs]) => ({
+      name,
+      pts: Math.round(Object.values(segs).reduce((a, b) => a + b, 0) * 10) / 10
+    })).sort((a, b) => b.pts - a.pts);
+
+    const changedSegments = [...new Set(
+      RIDERS
+        .filter(r => process.env[r.envToken])
+        .flatMap(r =>
+          SEGMENTS
+            .filter(seg => {
+              const oldPts = currentScores[r.name]?.[seg.name] || 0;
+              const newPts = mergedScores[r.name]?.[seg.name] || 0;
+              return oldPts !== newPts;
+            })
+            .map(seg => seg.name)
+        )
+    )];
+
+    const historyEntry = {
+      date: now,
+      segment: changedSegments.length > 0 ? changedSegments.join(' · ') : 'Auto sync',
+      results: RIDERS.filter(r => process.env[r.envToken]).map(r => r.name),
+      before,
+      changes,
+    };
+
+    // Prepend — newest on top
+    newHistory = [historyEntry, ...currentHistory];
+    console.log(`\nHistory entry added: ${historyEntry.date}`);
+  } else {
+    console.log('\nNo changes detected — skipping history entry.');
+  }
+
+  // ── Write to JSONBin ──
+  const updatedData = {
+    scores: mergedScores,
+    history: newHistory,
+    segmentTimes,
+    lastSync: new Date().toISOString(),
+  };
+
+  console.log('\nWriting to JSONBin...');
+  await writeJSONBin(updatedData);
+  console.log('✅ JSONBin updated successfully!');
+  console.log(`\nSync complete. ${changes.length} rider(s) had score changes.`);
 }
 
 main().catch(e => { console.error('Fatal error:', e); process.exit(1); });
