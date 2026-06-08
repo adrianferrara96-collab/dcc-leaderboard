@@ -8,15 +8,15 @@ const https = require('https');
 const RIDERS = [
   { name: 'Ferrara', envToken: 'STRAVA_REFRESH_TOKEN_FERRARA' },
   { name: 'Miller',  envToken: 'STRAVA_REFRESH_TOKEN_MILLER'  },
-  // Uncomment as tokens arrive:
-  // { name: 'Color',   envToken: 'STRAVA_REFRESH_TOKEN_COLOR'   },
-  // { name: 'Diego',   envToken: 'STRAVA_REFRESH_TOKEN_DIEGO'   },
   { name: 'Apo',     envToken: 'STRAVA_REFRESH_TOKEN_APO'     },
+  { name: 'Vega',    envToken: 'STRAVA_REFRESH_TOKEN_VEGA'    },
+  { name: 'Diego',   envToken: 'STRAVA_REFRESH_TOKEN_DIEGO'   },
+  { name: 'Aguirre', envToken: 'STRAVA_REFRESH_TOKEN_AGUIRRE' },
+  { name: 'Guzman',  envToken: 'STRAVA_REFRESH_TOKEN_GUZMAN'  },
+  // Uncomment as more tokens arrive:
+  // { name: 'Color',   envToken: 'STRAVA_REFRESH_TOKEN_COLOR'   },
   // { name: 'Gera',    envToken: 'STRAVA_REFRESH_TOKEN_GERA'    },
   // { name: 'Dago',    envToken: 'STRAVA_REFRESH_TOKEN_DAGO'    },
-  // { name: 'Guzman',  envToken: 'STRAVA_REFRESH_TOKEN_GUZMAN'  },
-  { name: 'Vega',    envToken: 'STRAVA_REFRESH_TOKEN_VEGA'    },
-  // { name: 'Aguirre', envToken: 'STRAVA_REFRESH_TOKEN_AGUIRRE' },
 ];
 
 // ─── SEGMENTS ────────────────────────────────────────────────────────────────
