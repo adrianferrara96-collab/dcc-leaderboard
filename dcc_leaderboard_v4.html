@@ -1014,6 +1014,44 @@ function buildSegSelect(){
   document.getElementById('segSel').innerHTML=SEGMENTS.map((s,i)=>`<option value="${i}">${s.name} (${s.tier==='King'?'👑 King':'Tier '+s.tier} · ×${s.weight})</option>`).join('');
   document.getElementById('segSel').addEventListener('change',buildRiderToggles);
 }
+  function parsePaste(){
+  const raw=document.getElementById('pasteBox').value;
+  if(!raw.trim()){showStatus('parseStatus','err','Paste some Strava text first.');return;}
+  const lines=raw.split('\n');
+  const timeRe=/(\d+:\d{2}(?::\d{2})?)\s*$/;
+  const found=[];
+  const seen=new Set();
+  for(const line of lines){
+    const tMatch=line.match(timeRe);
+    if(!tMatch) continue;
+    const time=tMatch[1];
+    let namePart=line.slice(0,tMatch.index).toLowerCase();
+    namePart=namePart.replace(/[-–].*$/,'').replace(/[🇲🇽]/g,'').trim();
+    let display=null;
+    for(const [stravaName,disp] of Object.entries(STRAVA_NAME_MAP)){
+      if(namePart.includes(stravaName)){display=disp;break;}
+    }
+    if(display && !seen.has(display)){
+      seen.add(display);
+      found.push({name:display,time});
+    }
+  }
+  if(!found.length){showStatus('parseStatus','err','No riders matched. Check the text format.');return;}
+  // Sort by time ascending
+  found.sort((a,b)=>timeToSecs(a.time)-timeToSecs(b.time));
+  // Check the matching toggles
+  document.querySelectorAll('#riderToggles input').forEach(i=>{i.checked=found.some(f=>f.name===i.value);});
+  document.querySelectorAll('.rtoggle').forEach(l=>l.classList.toggle('checked',l.querySelector('input').checked));
+  // Render rank list in parsed order
+  renderRankList(found.map(f=>f.name));
+  // Fill in times
+  found.forEach(f=>{
+    const item=document.querySelector(`#rankList .rank-item[data-rider="${f.name}"] .time-input`);
+    if(item) item.value=f.time;
+  });
+  reorderByTime();
+  showStatus('parseStatus','ok',`✅ Parsed ${found.length} riders. Review and preview.`);
+}
 function buildRiderToggles(){
   const riders=Object.keys(DATA.scores).sort();
   document.getElementById('riderToggles').innerHTML=riders.map(r=>{
