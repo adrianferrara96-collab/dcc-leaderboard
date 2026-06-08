@@ -564,8 +564,7 @@ async function fetchAndRender(){
   try{
     DATA=await readBin();
     if(!DATA.history?.length) DATA.history=JSON.parse(JSON.stringify(SEED_HISTORY));
-    document.getElementById('lastUpd').textContent=DATA.history?.length?'Updated: May 27, 2026, 4:07 PM'+DATA.history[DATA.history.length-1].date:'Season loaded ✓';
-    renderAll();
+const lastSync=DATA.lastSync?new Date(DATA.lastSync).toLocaleString('en-US',{timeZone:'America/Monterrey',month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'}):'';document.getElementById('lastUpd').textContent=lastSync?'Updated: '+lastSync:'Season loaded ✓';if(DATA.segmentTimes) SEGMENT_TIMES=DATA.segmentTimes;    renderAll();
   }catch(e){
     document.getElementById('standingsEl').innerHTML=`<div class="empty"><h3>Could not load</h3><p>${e.message}</p></div>`;
   }
