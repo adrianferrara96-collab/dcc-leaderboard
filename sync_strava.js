@@ -1,13 +1,14 @@
 // sync_strava.js — multi-rider OAuth, 2026 efforts only, pushes to JSONBin
+// SAFE MODE: only updates scores where a real Strava time was found. Never wipes existing scores.
 const https = require('https');
 
 // ─── RIDERS WITH TOKENS ───────────────────────────────────────────────────────
 // Add each rider's GitHub Secret env var name here as tokens come in.
-// If a rider has no token yet, set it to null — they'll be skipped.
+// Riders without a token are completely skipped — their scores stay untouched.
 const RIDERS = [
   { name: 'Ferrara', envToken: 'STRAVA_REFRESH_TOKEN_FERRARA' },
   { name: 'Miller',  envToken: 'STRAVA_REFRESH_TOKEN_MILLER'  },
-  // Add more as tokens arrive:
+  // Uncomment as tokens arrive:
   // { name: 'Color',   envToken: 'STRAVA_REFRESH_TOKEN_COLOR'   },
   // { name: 'Diego',   envToken: 'STRAVA_REFRESH_TOKEN_DIEGO'   },
   // { name: 'Apo',     envToken: 'STRAVA_REFRESH_TOKEN_APO'     },
@@ -50,12 +51,12 @@ const SEGMENTS = [
 const PTS_TABLE = [30, 27, 24, 22, 20, 18, 16, 14, 12, 10, 8, 7, 6, 5, 4, 3, 2, 1];
 
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
-const JSONBIN_BIN_ID    = '69fd24f0250b1311c31bd7ec';
+const JSONBIN_BIN_ID     = '69fd24f0250b1311c31bd7ec';
 const JSONBIN_MASTER_KEY = process.env.JSONBIN_MASTER_KEY;
-const CLIENT_ID         = process.env.STRAVA_CLIENT_ID;
-const CLIENT_SECRET     = process.env.STRAVA_CLIENT_SECRET;
-const START_DATE        = '2026-01-01T00:00:00Z';
-const END_DATE          = '2026-12-31T23:59:59Z';
+const CLIENT_ID          = process.env.STRAVA_CLIENT_ID;
+const CLIENT_SECRET      = process.env.STRAVA_CLIENT_SECRET;
+const START_DATE         = '2026-01-01T00:00:00Z';
+const END_DATE           = '2026-12-31T23:59:59Z';
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 function httpsGet(url, headers = {}) {
@@ -155,7 +156,7 @@ async function getAccessToken(refreshToken) {
   return res.access_token;
 }
 
-// ─── FETCH BEST 2026 EFFORT FOR A RIDER ON A SEGMENT ─────────────────────────
+// ─── FETCH BEST 2026 EFFORT FOR THE AUTHENTICATED RIDER ON A SEGMENT ─────────
 async function getBestEffort(accessToken, segmentId) {
   const url = `https://www.strava.com/api/v3/segment_efforts?segment_id=${segmentId}&start_date_local=${START_DATE}&end_date_local=${END_DATE}&per_page=10`;
   const { status, body } = await httpsGet(url, { Authorization: `Bearer ${accessToken}` });
@@ -170,7 +171,7 @@ async function getBestEffort(accessToken, segmentId) {
 
   if (!Array.isArray(body) || body.length === 0) return null;
 
-  // Return fastest effort
+  // Return fastest effort in 2026
   body.sort((a, b) => a.elapsed_time - b.elapsed_time);
   return body[0].elapsed_time;
 }
@@ -194,42 +195,40 @@ async function writeJSONBin(data) {
   if (status !== 200) throw new Error(`JSONBin write failed: ${status}`);
 }
 
-// ─── POINTS CALCULATION ───────────────────────────────────────────────────────
-function calcScores(segmentTimes) {
-  // segmentTimes: { segName: { riderName: "M:SS", ... }, ... }
+// ─── POINTS CALCULATION FOR A SINGLE SEGMENT ─────────────────────────────────
+// Takes ALL known times for a segment (existing + newly fetched) and returns
+// updated scores for every rider who has a time.
+function calcSegmentScores(segName, allTimes, weight) {
+  const entries = Object.entries(allTimes)
+    .map(([rider, time]) => ({ rider, secs: timeToSecs(time) }))
+    .filter(e => e.secs !== Infinity)
+    .sort((a, b) => a.secs - b.secs);
+
+  if (entries.length === 0) return {};
+
   const scores = {};
-
-  for (const seg of SEGMENTS) {
-    const timesForSeg = segmentTimes[seg.name] || {};
-    const entries = Object.entries(timesForSeg)
-      .map(([rider, time]) => ({ rider, secs: timeToSecs(time) }))
-      .filter(e => e.secs !== Infinity)
-      .sort((a, b) => a.secs - b.secs);
-
-    if (entries.length === 0) continue;
-
-    let rank = 1;
-    entries.forEach((e, i) => {
-      if (i > 0 && e.secs > entries[i - 1].secs) rank = i + 1;
-      const basePts = PTS_TABLE[rank - 1] || 1;
-      const pts = Math.round(basePts * seg.weight * 10) / 10;
-      if (!scores[e.rider]) scores[e.rider] = {};
-      scores[e.rider][seg.name] = pts;
-    });
-  }
-
+  let rank = 1;
+  entries.forEach((e, i) => {
+    if (i > 0 && e.secs > entries[i - 1].secs) rank = i + 1;
+    const basePts = PTS_TABLE[rank - 1] || 1;
+    scores[e.rider] = Math.round(basePts * weight * 10) / 10;
+  });
   return scores;
 }
 
 // ─── MAIN ────────────────────────────────────────────────────────────────────
 async function main() {
   console.log('=== DCC Strava Sync ===');
-  console.log(`Riders to sync: ${RIDERS.map(r => r.name).join(', ')}\n`);
 
   // Validate env vars
   if (!JSONBIN_MASTER_KEY) throw new Error('JSONBIN_MASTER_KEY secret not set');
   if (!CLIENT_ID) throw new Error('STRAVA_CLIENT_ID secret not set');
   if (!CLIENT_SECRET) throw new Error('STRAVA_CLIENT_SECRET secret not set');
+
+  // Filter to riders who actually have a token set
+  const activeRiders = RIDERS.filter(r => process.env[r.envToken]);
+  if (activeRiders.length === 0) throw new Error('No rider tokens found — nothing to sync');
+  console.log(`Riders to sync: ${activeRiders.map(r => r.name).join(', ')}\n`);
 
   // Read current data from JSONBin
   console.log('Reading current data from JSONBin...');
@@ -237,29 +236,21 @@ async function main() {
   const currentScores = currentData.scores || {};
   const currentHistory = currentData.history || [];
 
-  // segmentTimes: carry over times from ALL riders (including those without tokens)
-  // We only overwrite times for riders who have tokens — others stay as-is
+  // Load existing segment times (carry over all known times)
   const segmentTimes = {};
-  for (const seg of SEGMENTS) segmentTimes[seg.name] = {};
-
-  // Pre-populate existing times from currentData if available
-  if (currentData.segmentTimes) {
-    for (const seg of SEGMENTS) {
-      segmentTimes[seg.name] = { ...(currentData.segmentTimes[seg.name] || {}) };
-    }
+  for (const seg of SEGMENTS) {
+    segmentTimes[seg.name] = { ...(currentData.segmentTimes?.[seg.name] || {}) };
   }
 
   let requestCount = 0;
+  // Track which segments got new/updated times this run
+  const updatedSegments = new Set();
 
-  // ── Fetch times for each rider with a token ──
-  for (const rider of RIDERS) {
+  // ── Fetch fresh times for each active rider ──
+  for (const rider of activeRiders) {
     const refreshToken = process.env[rider.envToken];
-    if (!refreshToken) {
-      console.log(`⚠ Skipping ${rider.name} — no token found (${rider.envToken})`);
-      continue;
-    }
-
     console.log(`\n── ${rider.name} ──`);
+
     let accessToken;
     try {
       accessToken = await getAccessToken(refreshToken);
@@ -295,45 +286,62 @@ async function main() {
 
       if (secs !== null && secs !== undefined) {
         const timeStr = fmtTime(secs);
-        segmentTimes[seg.name][rider.name] = timeStr;
-        console.log(`  ✓ ${seg.name}: ${timeStr}`);
+        const existingTime = segmentTimes[seg.name][rider.name];
+
+        // Only update if no existing time, or new time is faster
+        if (!existingTime || timeToSecs(timeStr) < timeToSecs(existingTime)) {
+          segmentTimes[seg.name][rider.name] = timeStr;
+          updatedSegments.add(seg.name);
+          console.log(`  ✓ ${seg.name}: ${timeStr}${existingTime ? ` (was ${existingTime})` : ' (new)'}`);
+        } else {
+          console.log(`  — ${seg.name}: ${timeStr} (no improvement, keeping ${existingTime})`);
+        }
       }
 
       await sleep(350);
     }
   }
 
-  // ── Recalculate ALL scores from segment times ──
-  console.log('\nRecalculating scores...');
-  const newScores = calcScores(segmentTimes);
+  console.log(`\nSegments with new/improved times: ${updatedSegments.size}`);
 
-  // Merge: keep scores for riders without tokens, overwrite for those with tokens
-  const mergedScores = { ...currentScores };
-  for (const rider of RIDERS) {
-    if (!process.env[rider.envToken]) continue;
-    // Initialize all segments to 0 first
-    mergedScores[rider.name] = {};
-    for (const seg of SEGMENTS) {
-      mergedScores[rider.name][seg.name] = newScores[rider.name]?.[seg.name] || 0;
+  if (updatedSegments.size === 0) {
+    console.log('No improvements found — skipping score update and history entry.');
+    return;
+  }
+
+  // ── Recalculate scores only for updated segments ──
+  // Start from existing scores and only overwrite segments that changed
+  const newScores = JSON.parse(JSON.stringify(currentScores));
+
+  for (const segName of updatedSegments) {
+    const seg = SEGMENTS.find(s => s.name === segName);
+    if (!seg) continue;
+
+    const newSegScores = calcSegmentScores(segName, segmentTimes[segName], seg.weight);
+
+    // Update every rider's score for this segment
+    // Riders not in newSegScores (no time on this seg) keep their existing score
+    for (const [rider, pts] of Object.entries(newSegScores)) {
+      if (!newScores[rider]) newScores[rider] = {};
+      newScores[rider][segName] = pts;
     }
   }
 
-  // ── Detect changes ──
+  // ── Detect point changes ──
   const changes = [];
-  for (const rider of RIDERS) {
-    if (!process.env[rider.envToken]) continue;
-    const oldPts = Object.values(currentScores[rider.name] || {}).reduce((a, b) => a + b, 0);
-    const newPts = Object.values(mergedScores[rider.name] || {}).reduce((a, b) => a + b, 0);
-    const diff = Math.round((newPts - oldPts) * 10) / 10;
+  for (const rider of activeRiders) {
+    const oldTotal = Object.values(currentScores[rider.name] || {}).reduce((a, b) => a + b, 0);
+    const newTotal = Object.values(newScores[rider.name] || {}).reduce((a, b) => a + b, 0);
+    const diff = Math.round((newTotal - oldTotal) * 10) / 10;
     if (diff !== 0) {
       changes.push({ name: rider.name, d: diff });
       console.log(`  ${rider.name}: ${diff > 0 ? '+' : ''}${diff} pts`);
     } else {
-      console.log(`  ${rider.name}: no change`);
+      console.log(`  ${rider.name}: no point change`);
     }
   }
 
-  // ── Build history entry (only if something changed) ──
+  // ── Build history entry ──
   let newHistory = [...currentHistory];
   if (changes.length > 0) {
     const now = new Date().toLocaleString('en-US', {
@@ -347,24 +355,10 @@ async function main() {
       pts: Math.round(Object.values(segs).reduce((a, b) => a + b, 0) * 10) / 10
     })).sort((a, b) => b.pts - a.pts);
 
-    const changedSegments = [...new Set(
-      RIDERS
-        .filter(r => process.env[r.envToken])
-        .flatMap(r =>
-          SEGMENTS
-            .filter(seg => {
-              const oldPts = currentScores[r.name]?.[seg.name] || 0;
-              const newPts = mergedScores[r.name]?.[seg.name] || 0;
-              return oldPts !== newPts;
-            })
-            .map(seg => seg.name)
-        )
-    )];
-
     const historyEntry = {
       date: now,
-      segment: changedSegments.length > 0 ? changedSegments.join(' · ') : 'Auto sync',
-      results: RIDERS.filter(r => process.env[r.envToken]).map(r => r.name),
+      segment: [...updatedSegments].join(' · '),
+      results: activeRiders.map(r => r.name),
       before,
       changes,
     };
@@ -373,12 +367,12 @@ async function main() {
     newHistory = [historyEntry, ...currentHistory];
     console.log(`\nHistory entry added: ${historyEntry.date}`);
   } else {
-    console.log('\nNo changes detected — skipping history entry.');
+    console.log('\nTimes updated in segmentTimes but no point changes — no history entry needed.');
   }
 
   // ── Write to JSONBin ──
   const updatedData = {
-    scores: mergedScores,
+    scores: newScores,
     history: newHistory,
     segmentTimes,
     lastSync: new Date().toISOString(),
