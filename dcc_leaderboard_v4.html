@@ -642,6 +642,7 @@ function openSegLb(segIdx){
       </div>`;
     }).join('');
   }
+  const panel=document.getElementById('segLbPanel');
   panel.classList.add('open');
   panel.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
@@ -986,7 +987,7 @@ function saveCredentials(){
 }
 function toggleAdmin(){if(IS_ADMIN){lockAdmin();return;}document.getElementById('pwModal').classList.remove('hidden');setTimeout(()=>document.getElementById('pwInput').focus(),100);}
 function checkPassword(){
-  if(document.getElementById('pwInput').value===CFG.adminPw){IS_ADMIN=true;closePwModal();showAdminUI();buildRiderEntry();}
+  if(document.getElementById('pwInput').value===ADMIN_PW){IS_ADMIN=true;closePwModal();showAdminUI();buildRiderEntry();}
   else{showStatus('pwStatus','err','Wrong password');document.getElementById('pwInput').value='';}
 }
 function closePwModal(){document.getElementById('pwModal').classList.add('hidden');document.getElementById('pwInput').value='';document.getElementById('pwStatus').className='status-bar';}
@@ -1017,9 +1018,11 @@ document.querySelectorAll('.tab').forEach(t=>{
   });
 });
 const PUBLIC_BIN_ID = '69fd24f0250b1311c31bd7ec';
-loadCfg();
+// Hardcoded admin credentials so updates work from any device (club use).
+const ADMIN_PW = '012305';
+const MASTER_KEY = '$2a$10$CtbbTDwG/SQHvUzyIw5x7ev0MGdo/GWxUsTNPRktsczijltf2iKmO';
+CFG = { binId: PUBLIC_BIN_ID, masterKey: MASTER_KEY, adminPw: ADMIN_PW };
 buildSegSelect();
-if(!CFG.binId) CFG.binId = PUBLIC_BIN_ID;
 fetchAndRender();
 setInterval(()=>{if(!IS_ADMIN)fetchAndRender();},60000);
 
