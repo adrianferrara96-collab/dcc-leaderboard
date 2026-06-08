@@ -14,10 +14,12 @@ jobs:
         with:
           node-version: '20'
       - name: Run Strava sync
-        env:
+env:
           STRAVA_CLIENT_ID: ${{ secrets.STRAVA_CLIENT_ID }}
           STRAVA_CLIENT_SECRET: ${{ secrets.STRAVA_CLIENT_SECRET }}
           STRAVA_REFRESH_TOKEN_FERRARA: ${{ secrets.STRAVA_REFRESH_TOKEN_FERRARA }}
           STRAVA_REFRESH_TOKEN_MILLER: ${{ secrets.STRAVA_REFRESH_TOKEN_MILLER }}
+          STRAVA_REFRESH_TOKEN_APO: ${{ secrets.STRAVA_REFRESH_TOKEN_APO }}
+          STRAVA_REFRESH_TOKEN_VEGA: ${{ secrets.STRAVA_REFRESH_TOKEN_VEGA }}
           JSONBIN_MASTER_KEY: ${{ secrets.JSONBIN_MASTER_KEY }}
         run: node sync_strava.js
