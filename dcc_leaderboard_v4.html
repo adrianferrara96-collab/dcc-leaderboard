@@ -894,17 +894,26 @@ function buildRiderEntry(){
 function parsePaste(){
   const raw=document.getElementById('pasteBox').value;
   if(!raw.trim()){showStatus('parseStatus','err','Paste some Strava text first.');return;}
-  const lines=raw.split('\n');
+  const lines=raw.split('\n').map(l=>l.trim()).filter(l=>l.length);
   const timeRe=/(\d+:\d{2}(?::\d{2})?)\s*$/;
   const found={};
+  let currentRider=null;
   for(const line of lines){
-    const tMatch=line.match(timeRe);
-    if(!tMatch) continue;
-    const time=tMatch[1];
-    let namePart=line.slice(0,tMatch.index).toLowerCase();
-    namePart=namePart.replace(/[-–].*$/,'').replace(/🇲🇽/g,'').trim();
+    const lower=line.toLowerCase();
+    let matchedName=null;
     for(const [stravaName,disp] of Object.entries(STRAVA_NAME_MAP)){
-      if(namePart.includes(stravaName)){ if(!found[disp]) found[disp]=time; break; }
+      if(lower.includes(stravaName)){ matchedName=disp; break; }
+    }
+    if(matchedName){
+      currentRider=matchedName;
+      const tMatch=line.match(timeRe);
+      if(tMatch && !found[currentRider]){ found[currentRider]=tMatch[1]; currentRider=null; }
+      continue;
+    }
+    const tMatch=line.match(timeRe);
+    if(tMatch && currentRider && !found[currentRider]){
+      found[currentRider]=tMatch[1];
+      currentRider=null;
     }
   }
   const names=Object.keys(found);
@@ -914,7 +923,7 @@ function parsePaste(){
     const input=document.querySelector(`.entry-time[data-rider="${name}"]`);
     if(input){input.value=found[name];filled++;}
   });
-  showStatus('parseStatus','ok',`✅ Filled ${filled} riders. Review &amp; save.`);
+  showStatus('parseStatus','ok',`✅ Filled ${filled} riders. Review & save.`);
 }
 function buildPreview(){
   const segIdx=parseInt(document.getElementById('segSel').value);
