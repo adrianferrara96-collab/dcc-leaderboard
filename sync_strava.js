@@ -46,6 +46,7 @@ const SEGMENTS = [
   { name: "Los encinos",              id: 9488733,   weight: 0.7, tier: "4"    },
   { name: "Via Deportiva Loop",       id: 25950502,  weight: 0.8, tier: "3"    },
   { name: "VP Climb",                 id: 37538859,  weight: 0.8, tier: "3"    },
+  { name: "Huasteca",                 id: 11798885,  weight: 0.9, tier: "2"    },
 ];
 
 const PTS_TABLE = [30, 27, 24, 22, 20, 18, 16, 14, 12, 10, 8, 7, 6, 5, 4, 3, 2, 1];
