@@ -10,10 +10,13 @@ const RIDERS = [
   { name: 'Miller',  envToken: 'STRAVA_REFRESH_TOKEN_MILLER'  },
   { name: 'Color',   envToken: 'STRAVA_REFRESH_TOKEN_COLOR'   },
   { name: 'Apo',     envToken: 'STRAVA_REFRESH_TOKEN_APO'     },
-  { name: 'Vega',    envToken: 'STRAVA_REFRESH_TOKEN_VEGA'    },
   { name: 'Diego',   envToken: 'STRAVA_REFRESH_TOKEN_DIEGO'   },
   { name: 'Aguirre', envToken: 'STRAVA_REFRESH_TOKEN_AGUIRRE' },
   { name: 'Guzman',  envToken: 'STRAVA_REFRESH_TOKEN_GUZMAN'  },
+  { name: 'Gera',    envToken: 'STRAVA_REFRESH_TOKEN_GERA'    },
+  { name: 'Angel',   envToken: 'STRAVA_REFRESH_TOKEN_ANGEL'   },
+  { name: 'Dago',    envToken: 'STRAVA_REFRESH_TOKEN_DAGO'    },
+];
   // Uncomment as more tokens arrive:
   // { name: 'Gera',    envToken: 'STRAVA_REFRESH_TOKEN_GERA'    },
   // { name: 'Dago',    envToken: 'STRAVA_REFRESH_TOKEN_DAGO'    },
