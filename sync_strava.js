@@ -17,10 +17,6 @@ const RIDERS = [
   { name: 'Angel',   envToken: 'STRAVA_REFRESH_TOKEN_ANGEL'   },
   { name: 'Dago',    envToken: 'STRAVA_REFRESH_TOKEN_DAGO'    },
 ];
-  // Uncomment as more tokens arrive:
-  // { name: 'Gera',    envToken: 'STRAVA_REFRESH_TOKEN_GERA'    },
-  // { name: 'Dago',    envToken: 'STRAVA_REFRESH_TOKEN_DAGO'    },
-];
 
 // ─── SEGMENTS ────────────────────────────────────────────────────────────────
 const SEGMENTS = [
