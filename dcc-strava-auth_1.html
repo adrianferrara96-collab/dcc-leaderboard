@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DCC · Strava Connect</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --orange: #E8540A;
+  --orange-l: #FF7A38;
+  --dark: #0A0A0A;
+  --d2: #141414;
+  --d3: #1E1E1E;
+  --d4: #2A2A2A;
+  --white: #F0EDE8;
+  --gray: #777;
+  --green: #27AE60;
+  --strava: #FC4C02;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--dark);
+  color: var(--white);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+/* subtle grid background */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(232,84,10,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(232,84,10,.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+}
+
+.card {
+  background: var(--d2);
+  border: 1px solid var(--d4);
+  border-radius: 16px;
+  padding: 2.5rem 2rem;
+  max-width: 440px;
+  width: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+.logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2rem;
+  letter-spacing: .06em;
+  margin-bottom: .25rem;
+}
+.logo em { color: var(--orange); font-style: normal; }
+
+.badge {
+  display: inline-block;
+  background: var(--orange);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 2px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--d4);
+  margin: 1.5rem 0;
+}
+
+.step {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 1.1rem;
+  align-items: flex-start;
+}
+.step-num {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--d4);
+  color: var(--orange);
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.step-text {
+  font-size: 13px;
+  color: var(--gray);
+  line-height: 1.6;
+}
+.step-text strong { color: var(--white); }
+
+/* STRAVA BUTTON */
+.btn-strava {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  background: var(--strava);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 14px 20px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background .15s, transform .1s;
+  letter-spacing: .03em;
+  margin-top: 1.5rem;
+}
+.btn-strava:hover { background: #e04400; transform: translateY(-1px); }
+.btn-strava svg { flex-shrink: 0; }
+
+/* TOKEN RESULT */
+#resultSection { display: none; }
+.token-box {
+  background: var(--d3);
+  border: 1px solid var(--d4);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+.token-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--orange);
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.token-val {
+  font-family: monospace;
+  font-size: 12px;
+  color: var(--white);
+  word-break: break-all;
+  line-height: 1.6;
+  background: var(--dark);
+  border-radius: 5px;
+  padding: 8px 10px;
+}
+.copy-btn {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  background: var(--d4);
+  color: var(--white);
+  border: 1px solid #444;
+  border-radius: 6px;
+  padding: 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s;
+}
+.copy-btn:hover { background: #3a3a3a; }
+
+.success-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(39,174,96,.1);
+  border: 1px solid rgba(39,174,96,.3);
+  color: #2ecc71;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.error-box {
+  background: rgba(192,57,43,.1);
+  border: 1px solid rgba(192,57,43,.3);
+  color: #e74c3c;
+  border-radius: 6px;
+  padding: .75rem 1rem;
+  font-size: 13px;
+  margin-top: 1rem;
+  display: none;
+}
+
+.spinner {
+  display: inline-block;
+  width: 16px; height: 16px;
+  border: 2px solid rgba(255,255,255,.2);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+  vertical-align: middle;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.athlete-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 1rem;
+}
+.athlete-avatar {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--strava);
+}
+.athlete-name { font-weight: 600; font-size: 15px; }
+.athlete-sub { font-size: 11px; color: var(--gray); }
+
+.footer-note {
+  text-align: center;
+  font-size: 11px;
+  color: var(--gray);
+  margin-top: 1.5rem;
+  line-height: 1.6;
+}
+</style>
+</head>
+<body>
+
+<div class="card" id="mainCard">
+  <div class="logo">DCC<em>.</em> <span class="badge">2026</span></div>
+  <p style="font-size:13px;color:var(--gray);margin-top:.4rem;margin-bottom:1.25rem;">Connect your Strava account to sync your segment times automatically.</p>
+
+  <hr class="divider" style="margin-top:0;">
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-text">Click <strong>Connect with Strava</strong> below and log in with your Strava account.</div>
+  </div>
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-text">Strava will ask you to <strong>authorize the DCC app</strong> — click Authorize.</div>
+  </div>
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-text">You'll be brought back here. <strong>Copy your code</strong> and send it to Adrian.</div>
+  </div>
+
+  <a id="stravaAuthBtn" class="btn-strava" href="#" onclick="startAuth(event)">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+      <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/>
+    </svg>
+    Connect with Strava
+  </a>
+
+  <div class="error-box" id="errorBox"></div>
+
+  <!-- RESULT SECTION -->
+  <div id="resultSection">
+    <hr class="divider">
+    <div class="success-badge">✅ Connected successfully!</div>
+    <div id="athleteInfo"></div>
+    <div class="token-box">
+      <div class="token-label">Your Authorization Code — send this to Adrian</div>
+      <div class="token-val" id="tokenVal">—</div>
+      <button class="copy-btn" onclick="copyToken()">📋 Copy code</button>
+    </div>
+    <p style="font-size:11px;color:var(--gray);margin-top:.75rem;line-height:1.6;">Adrian will convert this into your sync token on his end — it's a one-time code and expires quickly, so send it soon after copying. Once he's added it, your times will sync automatically every day. You don't need to do anything else.</p>
+  </div>
+</div>
+
+<div class="footer-note">
+  DCC Leaderboard 2026 · Durango Cycling Club<br>
+  Your Strava data is only used to track segment times within DCC.
+</div>
+
+<script>
+const CLIENT_ID = '243828';
+const REDIRECT_URI = window.location.origin + window.location.pathname;
+
+// On page load, check if we're returning from Strava OAuth
+window.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  const error = params.get('error');
+
+  if (error) {
+    showError('Authorization was denied or cancelled. Please try again.');
+    return;
+  }
+
+  if (code) {
+    // No client secret lives in this page (it must never be shipped to the
+    // browser). We can't exchange the code for a token here, so we just
+    // show the athlete that they authorized successfully and give them the
+    // one-time code to relay to Adrian, who exchanges it privately.
+    showCode(code);
+    // Clean URL
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+});
+
+function startAuth(e) {
+  e.preventDefault();
+  const scope = 'read,activity:read,profile:read_all';
+  const authUrl = `https://www.strava.com/oauth/authorize?client_id=${CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&approval_prompt=force&scope=${scope}`;
+  window.location.href = authUrl;
+}
+
+function showCode(code) {
+  const btn = document.getElementById('stravaAuthBtn');
+  btn.style.display = 'none';
+
+  document.getElementById('athleteInfo').innerHTML = `
+    <div class="athlete-info">
+      <div>
+        <div class="athlete-name">Authorized ✓</div>
+        <div class="athlete-sub">Send the code below to Adrian to finish connecting.</div>
+      </div>
+    </div>`;
+
+  document.getElementById('tokenVal').textContent = code;
+  document.getElementById('resultSection').style.display = 'block';
+}
+
+function copyToken() {
+  const val = document.getElementById('tokenVal').textContent;
+  navigator.clipboard.writeText(val).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = '✅ Copied!';
+    setTimeout(() => btn.textContent = '📋 Copy code', 2000);
+  });
+}
+
+function showError(msg) {
+  const el = document.getElementById('errorBox');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+</script>
+</body>
+</html>
