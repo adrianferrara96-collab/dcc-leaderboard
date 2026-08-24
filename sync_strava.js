@@ -14,7 +14,6 @@ const RIDERS = [
   { name: 'Aguirre', envToken: 'STRAVA_REFRESH_TOKEN_AGUIRRE' },
   { name: 'Guzman',  envToken: 'STRAVA_REFRESH_TOKEN_GUZMAN'  },
   { name: 'Gera',    envToken: 'STRAVA_REFRESH_TOKEN_GERA'    },
-  { name: 'Angel',   envToken: 'STRAVA_REFRESH_TOKEN_ANGEL'   },
   { name: 'Dago',    envToken: 'STRAVA_REFRESH_TOKEN_DAGO'    },
 ];
 
