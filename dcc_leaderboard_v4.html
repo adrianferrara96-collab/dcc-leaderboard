@@ -37,6 +37,11 @@ header{padding:1.25rem 2rem;border-bottom:1px solid var(--d4);display:flex;align
 .tab{padding:.7rem 1.1rem;font-size:11px;font-weight:600;color:var(--gray);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;letter-spacing:.07em;text-transform:uppercase;user-select:none;white-space:nowrap;}
 .tab:hover{color:var(--white);}
 .tab.active{color:var(--orange);border-bottom-color:var(--orange);}
+.mode-bar{display:flex;gap:8px;margin-bottom:1.25rem;}
+.mode-btn{flex:0 0 auto;padding:.55rem 1.4rem;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--d4);border-radius:7px;background:var(--d2);color:var(--gray);cursor:pointer;transition:all .15s;font-family:'DM Sans',sans-serif;}
+.mode-btn:hover{color:var(--white);border-color:var(--d5);}
+.mode-btn.active{background:var(--orange);border-color:var(--orange);color:#fff;}
+@media(max-width:480px){.mode-bar{gap:6px;margin-bottom:1rem;}.mode-btn{flex:1;padding:.5rem .5rem;font-size:10px;}}
 main{padding:1.5rem 2rem;max-width:1140px;margin:0 auto;}
 .section{display:none;}
 .section.active{display:block;}
@@ -202,7 +207,6 @@ input:focus,textarea:focus{border-color:var(--orange);}
 @keyframes spin{to{transform:rotate(360deg);}}
 .empty{text-align:center;padding:3rem 2rem;color:var(--gray);}
 .empty h3{font-size:1rem;color:var(--gl);margin-bottom:.3rem;}
-
 /* ── MOBILE POLISH (iPhone) ─────────────────────────────── */
 @media(max-width:480px){
   header{padding:0.9rem 1rem;}
@@ -266,6 +270,10 @@ input:focus,textarea:focus{border-color:var(--orange);}
   <div class="tab" data-tab="rules">📋 Rules</div>
 </nav>
 <main>
+  <div class="mode-bar">
+    <button class="mode-btn active" data-mode="road" onclick="setMode('road')">🚴 Ruta</button>
+    <button class="mode-btn" data-mode="mtb" onclick="setMode('mtb')">🚵 MTB</button>
+  </div>
   <div class="section active" id="tab-standings">
     <div class="sum-bar" id="sumBar"></div>
     <div class="chart-wrap">
@@ -401,6 +409,25 @@ const SEGMENTS = [
   {name:"VP Climb",weight:0.8,tier:"3",strava:"https://www.strava.com/segments/37538859"},
   {name:"Huasteca",weight:0.9,tier:"2",strava:"https://www.strava.com/segments/11798885"},
 ];
+// ─── MTB SEGMENTS ────────────────────────────────────────────────────────────
+// tier weights mirror the road scale: 1 -> ×1.0, 2 -> ×0.9, 3 -> ×0.8 (no King/Tier4 in MTB)
+const MTB_SEGMENTS = [
+  {name:"Chile - Deslavada - Puerto del Aire",loc:"Chip",type:"Subida",tier:"2",weight:0.9,strava:"https://www.strava.com/segments/3519287"},
+  {name:"Brecha del Chile - Entronque San Agustin",loc:"Chip",type:"Subida",tier:"2",weight:0.9,strava:"https://www.strava.com/segments/7890483"},
+  {name:"Vereda La Deslavada",loc:"Chip",type:"Subida",tier:"1",weight:1.0,strava:"https://www.strava.com/segments/1460193"},
+  {name:"Uphill Z",loc:"Chip",type:"Subida",tier:"1",weight:1.0,strava:"https://www.strava.com/segments/11443806"},
+  {name:"Puerto del Aire - Pinal",loc:"Chip",type:"Subida",tier:"2",weight:0.9,strava:"https://www.strava.com/segments/2267492"},
+  {name:"Bebederos a Epazote",loc:"Chip",type:"Subida",tier:"3",weight:0.8,strava:"https://www.strava.com/segments/4648497"},
+  {name:"Coatí 3 - Downhill",loc:"Chip",type:"DH",tier:"1",weight:1.0,strava:"https://www.strava.com/segments/15203760"},
+  {name:"Coatí 3-2-1 downhill",loc:"Chip",type:"DH",tier:"3",weight:0.8,strava:"https://www.strava.com/segments/15558003"},
+  {name:"DH Moras-San Agustin",loc:"Chip",type:"DH",tier:"3",weight:0.8,strava:"https://www.strava.com/segments/11287426"},
+  {name:"Downhill Z",loc:"Chip",type:"DH",tier:"1",weight:1.0,strava:"https://www.strava.com/segments/11443815"},
+  {name:"koati chile",loc:"Chip",type:"DH",tier:"1",weight:1.0,strava:"https://www.strava.com/segments/12356845"},
+  {name:"Ascenso Rhinos Huasteca",loc:"Rhinos",type:"Subida",tier:"1",weight:1.0,strava:"https://www.strava.com/segments/7795575"},
+  {name:"Rinos UP Virgen -> Puerto",loc:"Rhinos",type:"Subida",tier:"3",weight:0.8,strava:"https://www.strava.com/segments/10262658"},
+  {name:"Descenso Rinos desde la virgen",loc:"Rhinos",type:"DH",tier:"1",weight:1.0,strava:"https://www.strava.com/segments/9147011"},
+];
+const MTB_RIDERS = ['Ferrara','Miller','Color','Apo','Aguirre','Guzman','Gera','Pato'];
 const PTS_TABLE = [30,27,24,22,20,18,16,14,12,10,8,7,6,5,4,3,2,1];
 function dp(pts){ return Math.round(pts); }
 const TOTAL_SEGMENTS = 26;
@@ -420,12 +447,34 @@ const RIDER_COLORS = {
   Guzman:'#27AE60',Pollo:'#8E44AD',Santi:'#16A085',Ruiz:'#D35400',Roco:'#2980B9',
   Zertuche:'#7F8C8D',Melesio:'#BDC3C7',Aguirre:'#C0392B',
 };
-
 const SEED_HISTORY = [];
-
 let SEGMENT_TIMES = {};
 SEGMENTS.forEach(s=>SEGMENT_TIMES[s.name]={});
-
+let MTB_SEGMENT_TIMES = {};
+MTB_SEGMENTS.forEach(s=>MTB_SEGMENT_TIMES[s.name]={});
+// ─── ROAD / MTB MODE ─────────────────────────────────────────────────────────
+const TIER_ORDER = { road:['King','1','2','3','4'], mtb:['1','2','3'] };
+const TIER_LABELS = { King:'👑 King', 1:'Tier 1', 2:'Tier 2', 3:'Tier 3', 4:'Tier 4' };
+const ROAD_TIERS = [
+  {tier:'King',mult:'×1.1',desc:'The main climb — Olinalá',col:'var(--gold)'},
+  {tier:'1',mult:'×1.0',desc:'Premier segments',col:'var(--orange-l)'},
+  {tier:'2',mult:'×0.9',desc:'Secondary climbs',col:'#5DADE2'},
+  {tier:'3',mult:'×0.8',desc:'Tertiary segments',col:'#2ECC71'},
+  {tier:'4',mult:'×0.7',desc:'Bonus segments',col:'var(--gray)'},
+];
+const MTB_TIERS = [
+  {tier:'1',mult:'×1.0',desc:'Top MTB segments',col:'var(--orange-l)'},
+  {tier:'2',mult:'×0.9',desc:'Secondary MTB segments',col:'#5DADE2'},
+  {tier:'3',mult:'×0.8',desc:'Bonus MTB segments',col:'#2ECC71'},
+];
+let CURRENT_MODE = 'road'; // 'road' | 'mtb'
+function activeSegments(){ return CURRENT_MODE==='mtb' ? MTB_SEGMENTS : SEGMENTS; }
+function activeTotalSegments(){ return activeSegments().length; }
+function activeScoresKey(){ return CURRENT_MODE==='mtb' ? 'mtbScores' : 'scores'; }
+function activeTimesKey(){ return CURRENT_MODE==='mtb' ? 'mtbSegmentTimes' : 'segmentTimes'; }
+function activeHistoryKey(){ return CURRENT_MODE==='mtb' ? 'mtbHistory' : 'history'; }
+function activeRosterFilter(){ return CURRENT_MODE==='mtb' ? MTB_RIDERS : null; }
+function activeTimes(){ return CURRENT_MODE==='mtb' ? MTB_SEGMENT_TIMES : SEGMENT_TIMES; }
 function timeToSecs(t){
   if(!t) return 0;
   const parts = t.split(':').map(Number);
@@ -438,14 +487,11 @@ function fmtGap(secs){
   const s = secs % 60;
   return `+${m}:${String(s).padStart(2,'0')}`;
 }
-
 let CFG={binId:'',masterKey:'',adminPw:''};
 let DATA={scores:{},history:[]};
 let IS_ADMIN=false;
-
 function loadCfg(){try{CFG=JSON.parse(localStorage.getItem('dcc_cfg')||'{}');}catch(e){}CFG.binId=CFG.binId||'';CFG.masterKey=CFG.masterKey||'';CFG.adminPw=CFG.adminPw||'';}
 function saveCfg(){localStorage.setItem('dcc_cfg',JSON.stringify(CFG));}
-
 const BIN_BASE='https://api.jsonbin.io/v3';
 async function readBin(){
   const r=await fetch(`${BIN_BASE}/b/${CFG.binId}/latest`,{headers:{'X-Master-Key':CFG.masterKey}});
@@ -456,12 +502,15 @@ async function writeBin(d){
   const r=await fetch(`${BIN_BASE}/b/${CFG.binId}`,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':CFG.masterKey},body:JSON.stringify(d)});
   if(!r.ok)throw new Error(`Write error: ${r.status}`);
 }
-
 async function fetchAndRender(){
   try{
     DATA=await readBin();
     if(!DATA.history) DATA.history=[];
+    if(!DATA.mtbHistory) DATA.mtbHistory=[];
+    if(!DATA.scores) DATA.scores={};
+    if(!DATA.mtbScores) DATA.mtbScores={};
     if(DATA.segmentTimes) SEGMENT_TIMES=DATA.segmentTimes;
+    if(DATA.mtbSegmentTimes) MTB_SEGMENT_TIMES=DATA.mtbSegmentTimes;
     const lastSync=DATA.lastSync?new Date(DATA.lastSync).toLocaleString('en-US',{timeZone:'America/Monterrey',month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'}):'';
     document.getElementById('lastUpd').textContent=lastSync?'Updated: '+lastSync:'Season loaded ✓';
     renderAll();
@@ -469,17 +518,20 @@ async function fetchAndRender(){
     document.getElementById('standingsEl').innerHTML=`<div class="empty"><h3>Could not load</h3><p>${e.message}</p></div>`;
   }
 }
-
 function calcTotals(){
+  const scores=DATA[activeScoresKey()]||{};
+  const roster=activeRosterFilter();
   const t={};
-  for(const r in DATA.scores){let p=0;for(const s in DATA.scores[r])p+=DATA.scores[r][s]||0;t[r]=Math.round(p*10)/10;}
+  for(const r in scores){
+    if(roster && !roster.includes(r)) continue;
+    let p=0;for(const s in scores[r])p+=scores[r][s]||0;
+    t[r]=Math.round(p*10)/10;
+  }
   return t;
 }
 function getRanked(){return Object.entries(calcTotals()).sort((a,b)=>b[1]-a[1]).map(([name,pts],i)=>({name,pts,rank:i+1}));}
-function getSegCount(r){return Object.values(DATA.scores[r]||{}).filter(v=>v>0).length;}
-
+function getSegCount(r){const scores=DATA[activeScoresKey()]||{};return Object.values(scores[r]||{}).filter(v=>v>0).length;}
 function renderAll(){renderBarChart();renderStandings();renderProfileSelect();renderCompareSelects();}
-
 function renderBarChart(){
   const ranked=getRanked();
   if(!ranked.length){document.getElementById('barChart').innerHTML='';return;}
@@ -497,27 +549,29 @@ function renderBarChart(){
     </div>`;
   }).join('');
 }
-
 function getPrevRanks(){
   let prevRanks={},prevPts={};
-  if(DATA.history?.length){
-    const last=DATA.history[0];
+  const hist=DATA[activeHistoryKey()];
+  if(hist?.length){
+    const last=hist[0];
     (last.before||[]).forEach((r,i)=>{prevRanks[r.name]=i+1;prevPts[r.name]=r.pts;});
   }
   return {prevRanks,prevPts};
 }
-
 function renderStandings(){
   const ranked=getRanked();
+  const scores=DATA[activeScoresKey()]||{};
+  const hist=DATA[activeHistoryKey()]||[];
+  const totalSegs=activeTotalSegments();
   const sb=document.getElementById('sumBar');
   const el=document.getElementById('standingsEl');
   const activeSegs=new Set();
-  for(const r in DATA.scores)for(const s in DATA.scores[r])if(DATA.scores[r][s]>0)activeSegs.add(s);
+  for(const r in scores)for(const s in scores[r])if(scores[r][s]>0)activeSegs.add(s);
   sb.innerHTML=`
     <div class="sum-card"><div class="sum-val">${ranked.length}</div><div class="sum-lbl">Riders</div></div>
-    <div class="sum-card"><div class="sum-val">${activeSegs.size}<span style="font-size:1rem;color:var(--gray)">/${TOTAL_SEGMENTS}</span></div><div class="sum-lbl">Segments</div></div>
+    <div class="sum-card"><div class="sum-val">${activeSegs.size}<span style="font-size:1rem;color:var(--gray)">/${totalSegs}</span></div><div class="sum-lbl">Segments</div></div>
     <div class="sum-card"><div class="sum-val">${ranked[0]?dp(ranked[0].pts):0}</div><div class="sum-lbl">Leader pts</div></div>
-    <div class="sum-card"><div class="sum-val">${DATA.history?.length||0}</div><div class="sum-lbl">Updates</div></div>
+    <div class="sum-card"><div class="sum-val">${hist.length||0}</div><div class="sum-lbl">Updates</div></div>
   `;
   const {prevRanks,prevPts}=getPrevRanks();
   el.innerHTML=ranked.map((r,i)=>{
@@ -527,7 +581,7 @@ function renderStandings(){
     const isAuto=AUTO_SYNC_RIDERS.includes(r.name);
     const dotCls=isAuto?'sync-auto':'sync-manual';
     const dotTitle=isAuto?'Auto-syncs from Strava':'Manual updates';
-    const chips=Object.entries(DATA.scores[r.name]||{}).filter(([,p])=>p>0).sort((a,b)=>b[1]-a[1])
+    const chips=Object.entries(scores[r.name]||{}).filter(([,p])=>p>0).sort((a,b)=>b[1]-a[1])
       .map(([seg,pts])=>`<div class="chip"><span class="chip-seg">${seg}</span><span class="chip-pts">${dp(pts)}</span></div>`).join('');
     let chgPts='',chgPos='',chgCls='neu';
     if(prevPts[r.name]!==undefined){const d=Math.round((r.pts-prevPts[r.name])*10)/10;chgPts=d>0?`+${dp(d)}`:d<0?`${dp(d)}`:`±0`;chgCls=d>0?'up':d<0?'dn':'neu';}
@@ -537,7 +591,7 @@ function renderStandings(){
         <div class="rank-n">${r.rank}</div>
         <div class="r-info">
           <div class="avatar" style="background:${col}22;color:${col};">${r.name.slice(0,2).toUpperCase()}</div>
-          <div><div class="r-name"><span class="sync-dot ${dotCls}" title="${dotTitle}"></span>${r.name}</div><div class="r-sub">${cnt} / ${TOTAL_SEGMENTS} segments</div></div>
+          <div><div class="r-name"><span class="sync-dot ${dotCls}" title="${dotTitle}"></span>${r.name}</div><div class="r-sub">${cnt} / ${totalSegs} segments</div></div>
         </div>
         <div class="pts-col"><div class="pts-big">${dp(r.pts)}</div><div class="pts-lbl">points</div></div>
         <div class="change-col">
@@ -553,30 +607,32 @@ function renderStandings(){
   }).join('');
 }
 function toggleBD(id){document.getElementById(id)?.classList.toggle('open');}
-
 let activeSegName = null;
 function renderSegments(){
   const panel=document.getElementById('segLbPanel');
   panel.classList.remove('open');
   activeSegName=null;
-  const tierOrder=['King','1','2','3','4'];
-  const tierLabels={King:'👑 King',1:'Tier 1',2:'Tier 2',3:'Tier 3',4:'Tier 4'};
+  const segs=activeSegments();
+  const scores=DATA[activeScoresKey()]||{};
+  const tierOrder=TIER_ORDER[CURRENT_MODE];
   const grouped={};
   tierOrder.forEach(t=>grouped[t]=[]);
-  SEGMENTS.forEach((s,si)=>grouped[s.tier]&&grouped[s.tier].push({s,si}));
+  segs.forEach((s,si)=>grouped[s.tier]&&grouped[s.tier].push({s,si}));
   let html='';
   tierOrder.forEach(tier=>{
     if(!grouped[tier]||!grouped[tier].length) return;
-    html+=`<div class="tier-divider"><span>${tierLabels[tier]||'Tier '+tier}</span></div>`;
+    html+=`<div class="tier-divider"><span>${TIER_LABELS[tier]||'Tier '+tier}</span></div>`;
     grouped[tier].forEach(({s,si})=>{
       let leader='',lpts=0;
-      for(const r in DATA.scores){const p=DATA.scores[r][s.name]||0;if(p>lpts){lpts=p;leader=r;}}
+      for(const r in scores){const p=scores[r][s.name]||0;if(p>lpts){lpts=p;leader=r;}}
       const hasData=lpts>0;
       html+=`<div class="seg-card" id="sc_${si}" onclick="openSegLb(${si})">
         <div class="seg-card-name">${s.name}${s.strava?`<a class="strava-link" href="${s.strava}" target="_blank" onclick="event.stopPropagation()" title="View on Strava"><svg viewBox="0 0 24 24" fill="#FC4C02" xmlns="http://www.w3.org/2000/svg"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg></a>`:''}</div>
         <div class="seg-meta">
           <span class="tier-pill t${s.tier}">${s.tier==='King'?'👑 King':'Tier '+s.tier}</span>
           <span class="wval">×${s.weight}</span>
+          ${s.type?`<span class="wval">· ${s.type}</span>`:''}
+          ${s.loc?`<span class="wval">· ${s.loc}</span>`:''}
         </div>
         ${hasData?`<div class="seg-leader">Leader: <strong style="color:var(--white);">${leader}</strong> · ${dp(lpts)} pts</div>`:'<div class="seg-leader">No data yet</div>'}
         <div class="seg-click-hint">Click to see leaderboard ↗</div>
@@ -586,21 +642,23 @@ function renderSegments(){
   document.getElementById('segGrid').innerHTML=html;
 }
 function openSegLb(segIdx){
-  const seg = SEGMENTS[segIdx];
+  const segs=activeSegments();
+  const seg = segs[segIdx];
   if(!seg) return;
   const segName = seg.name;
   if(activeSegName===segName){closeSegLb();return;}
   if(activeSegName){
-    const prevIdx = SEGMENTS.findIndex(s=>s.name===activeSegName);
+    const prevIdx = segs.findIndex(s=>s.name===activeSegName);
     const prev=document.getElementById('sc_'+prevIdx);
     if(prev)prev.classList.remove('active-seg');
   }
   activeSegName=segName;
   const card=document.getElementById('sc_'+segIdx);
   if(card)card.classList.add('active-seg');
+  const scores=DATA[activeScoresKey()]||{};
   const entries=[];
-  for(const rider in DATA.scores){
-    const pts=DATA.scores[rider][segName]||0;
+  for(const rider in scores){
+    const pts=scores[rider][segName]||0;
     if(pts>0) entries.push({rider,pts});
   }
   entries.sort((a,b)=>b.pts-a.pts);
@@ -608,7 +666,7 @@ function openSegLb(segIdx){
   const stravaUrl=seg.strava||'';
   document.getElementById('segLbTitle').innerHTML=segName+(stravaUrl?` <a href="${stravaUrl}" target="_blank" style="display:inline-flex;align-items:center;vertical-align:middle;margin-left:8px;opacity:0.8;" title="View on Strava"><svg viewBox="0 0 24 24" width="20" height="20" fill="#FC4C02" xmlns="http://www.w3.org/2000/svg"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg></a>`:'');
   document.getElementById('segLbMeta').textContent=`${tierLabel} · ×${seg.weight} weight · ${entries.length} rider${entries.length!==1?'s':''} scored`;
-  const segTimes = SEGMENT_TIMES[segName] || {};
+  const segTimes = activeTimes()[segName] || {};
   const leaderTime = entries.length ? segTimes[entries[0].rider] : null;
   const leaderSecs = leaderTime ? timeToSecs(leaderTime) : 0;
   if(entries.length===0){
@@ -649,14 +707,13 @@ function openSegLb(segIdx){
 }
 function closeSegLb(){
   if(activeSegName){
-    const prevIdx = SEGMENTS.findIndex(s=>s.name===activeSegName);
+    const prevIdx = activeSegments().findIndex(s=>s.name===activeSegName);
     const card=document.getElementById('sc_'+prevIdx);
     if(card)card.classList.remove('active-seg');
   }
   activeSegName=null;
   document.getElementById('segLbPanel').classList.remove('open');
 }
-
 function renderProfileSelect(){
   const sel=document.getElementById('riderProfileSel');
   const cur=sel.value;
@@ -672,8 +729,9 @@ function renderProfile(){
   const me=ranked.find(r=>r.name===name);
   if(!me){el.innerHTML='';return;}
   const col=RIDER_COLORS[name]||'#888';
-  const scores=DATA.scores[name]||{};
+  const scores=(DATA[activeScoresKey()]||{})[name]||{};
   const cnt=getSegCount(name);
+  const totalSegs=activeTotalSegments();
   const leader=ranked[0];
   const gapToLeader=Math.round((leader.pts-me.pts)*10)/10;
   const prevRider=ranked[me.rank-2];
@@ -687,7 +745,7 @@ function renderProfile(){
       </div>
       <div class="profile-stats">
         <div class="pstat"><div class="pstat-val" style="color:${col};">${me.pts}</div><div class="pstat-lbl">Total pts</div></div>
-        <div class="pstat"><div class="pstat-val">${cnt}<span style="font-size:1rem;color:var(--gray)">/${TOTAL_SEGMENTS}</span></div><div class="pstat-lbl">Segments</div></div>
+        <div class="pstat"><div class="pstat-val">${cnt}<span style="font-size:1rem;color:var(--gray)">/${totalSegs}</span></div><div class="pstat-lbl">Segments</div></div>
         <div class="pstat"><div class="pstat-val ${gapToLeader>0?'dn':''}">${me.rank===1?'👑':'-'+gapToLeader}</div><div class="pstat-lbl">${me.rank===1?'Leader':'Gap to #1'}</div></div>
       </div>
     </div>
@@ -703,10 +761,13 @@ function renderProfile(){
         <thead><tr><th>Segment</th><th>Pos</th><th>My Time</th><th>Time Gap</th></tr></thead>
         <tbody>
           ${(()=>{
-            const tierOrder=['King','1','2','3','4'];
+            const segs=activeSegments();
+            const scoresAll=DATA[activeScoresKey()]||{};
+            const times=activeTimes();
+            const tierOrder=TIER_ORDER[CURRENT_MODE];
             const grouped={};
             tierOrder.forEach(t=>grouped[t]=[]);
-            SEGMENTS.forEach(seg=>grouped[seg.tier]&&grouped[seg.tier].push(seg));
+            segs.forEach(seg=>grouped[seg.tier]&&grouped[seg.tier].push(seg));
             let rows='';
             tierOrder.forEach(tier=>{
               if(!grouped[tier]||!grouped[tier].length) return;
@@ -715,7 +776,7 @@ function renderProfile(){
               grouped[tier].forEach(seg=>{
                 const myPts=scores[seg.name]||0;
                 const has=myPts>0;
-                const segEntries=Object.entries(DATA.scores).filter(([,s])=>(s[seg.name]||0)>0).sort((a,b)=>(b[1][seg.name]||0)-(a[1][seg.name]||0));
+                const segEntries=Object.entries(scoresAll).filter(([,s])=>(s[seg.name]||0)>0).sort((a,b)=>(b[1][seg.name]||0)-(a[1][seg.name]||0));
                 let myPos='—';
                 if(has){
                   let rank=1;
@@ -724,7 +785,7 @@ function renderProfile(){
                     if(segEntries[i][0]===name){myPos=rank;break;}
                   }
                 }
-                const segTimes=SEGMENT_TIMES[seg.name]||{};
+                const segTimes=times[seg.name]||{};
                 const myTime=segTimes[name]||'';
                 const leaderRider=segEntries.length?segEntries[0][0]:'';
                 const leaderTime=segTimes[leaderRider]||'';
@@ -747,7 +808,6 @@ function renderProfile(){
       </table>
     </div>`;
 }
-
 // ─── COMPARE (head-to-head) ──────────────────────────────────────────────────
 function renderCompareSelects(){
   const ranked=getRanked();
@@ -767,12 +827,15 @@ function renderCompare(){
   const ranked=getRanked();
   const ra=ranked.find(r=>r.name===a),rb=ranked.find(r=>r.name===b);
   const colA=RIDER_COLORS[a]||'#888',colB=RIDER_COLORS[b]||'#888';
+  const segs=activeSegments();
+  const times=activeTimes();
+  const scores=DATA[activeScoresKey()]||{};
   let aWins=0,bWins=0;
-  const rows=SEGMENTS.map(seg=>{
-    const ta=SEGMENT_TIMES[seg.name]?.[a]||'';
-    const tb=SEGMENT_TIMES[seg.name]?.[b]||'';
-    const pa=DATA.scores[a]?.[seg.name]||0;
-    const pb=DATA.scores[b]?.[seg.name]||0;
+  const rows=segs.map(seg=>{
+    const ta=times[seg.name]?.[a]||'';
+    const tb=times[seg.name]?.[b]||'';
+    const pa=scores[a]?.[seg.name]||0;
+    const pb=scores[b]?.[seg.name]||0;
     let winner='';
     if(ta&&tb){ if(timeToSecs(ta)<timeToSecs(tb)){winner='a';aWins++;} else if(timeToSecs(tb)<timeToSecs(ta)){winner='b';bWins++;} }
     else if(ta&&!tb){winner='a';aWins++;}
@@ -795,12 +858,13 @@ function renderCompare(){
       <table class="seg-table"><thead><tr><th>Segment</th><th style="text-align:center;">${a}</th><th></th><th style="text-align:center;">${b}</th></tr></thead><tbody>${rows||'<tr><td colspan="4" style="text-align:center;color:var(--gl);">No shared segment data</td></tr>'}</tbody></table>
     </div>`;
 }
-
 function renderHistory(){
   const el=document.getElementById('histList');
-  if(!DATA.history?.length){el.innerHTML=`<div class="empty"><h3>No updates yet</h3></div>`;return;}
-  el.innerHTML=DATA.history.map((h)=>{
-    const seg=SEGMENTS.find(s=>s.name===h.segment);
+  const hist=DATA[activeHistoryKey()]||[];
+  const segs=activeSegments();
+  if(!hist.length){el.innerHTML=`<div class="empty"><h3>No updates yet</h3></div>`;return;}
+  el.innerHTML=hist.map((h)=>{
+    const seg=segs.find(s=>s.name===h.segment);
     const tierLabel=seg?(seg.tier==='King'?'👑 King':'Tier '+seg.tier):'';
     const tierCl=seg?`t${seg.tier}`:'';
     const sorted=[...(h.changes||[])].sort((a,b)=>Math.abs(b.d)-Math.abs(a.d));
@@ -834,53 +898,50 @@ function renderHistory(){
     </div>`;
   }).join('');
 }
-
 function renderRules(){
   const ord=['st','nd','rd'];
   document.getElementById('ptsTableBody').innerHTML=PTS_TABLE.map((p,i)=>`<tr><td class="pos">${i+1}${ord[i]||'th'}</td><td class="pts">${p} pts</td></tr>`).join('');
-  const tiers=[
-    {tier:'King',mult:'×1.1',desc:'The main climb — Olinalá',col:'var(--gold)'},
-    {tier:'1',mult:'×1.0',desc:'Premier segments',col:'var(--orange-l)'},
-    {tier:'2',mult:'×0.9',desc:'Secondary climbs',col:'#5DADE2'},
-    {tier:'3',mult:'×0.8',desc:'Tertiary segments',col:'#2ECC71'},
-    {tier:'4',mult:'×0.7',desc:'Bonus segments',col:'var(--gray)'},
-  ];
+  const tiers=CURRENT_MODE==='mtb'?MTB_TIERS:ROAD_TIERS;
+  const segs=activeSegments();
   document.getElementById('tierRules').innerHTML=tiers.map(t=>`
     <div class="tier-row">
       <div class="tier-info">
         <span class="tier-pill t${t.tier}">${t.tier==='King'?'👑 King':'Tier '+t.tier}</span>
         <div class="tier-desc">${t.desc}</div>
-        <div class="tier-segs">${SEGMENTS.filter(s=>s.tier===t.tier).map(s=>s.name).join(' · ')}</div>
+        <div class="tier-segs">${segs.filter(s=>s.tier===t.tier).map(s=>s.name).join(' · ')}</div>
       </div>
       <div class="tier-mult" style="color:${t.col};">${t.mult}</div>
     </div>`).join('');
 }
-
 // ─── UPDATE TAB (new simplified logic) ───────────────────────────────────────
 function recalcSegment(segName){
-  const seg=SEGMENTS.find(s=>s.name===segName);
+  const seg=activeSegments().find(s=>s.name===segName);
   if(!seg) return;
-  const times=SEGMENT_TIMES[segName]||{};
+  const scoresKey=activeScoresKey();
+  if(!DATA[scoresKey]) DATA[scoresKey]={};
+  const times=activeTimes()[segName]||{};
   const entries=Object.entries(times).map(([rider,time])=>({rider,secs:timeToSecs(time)})).filter(e=>e.secs>0).sort((a,b)=>a.secs-b.secs);
-  for(const rider in DATA.scores){ if(DATA.scores[rider]) DATA.scores[rider][segName]=0; }
+  for(const rider in DATA[scoresKey]){ if(DATA[scoresKey][rider]) DATA[scoresKey][rider][segName]=0; }
   let rank=1;
   entries.forEach((e,i)=>{
     if(i>0 && e.secs>entries[i-1].secs) rank=i+1;
     const pts=Math.round((PTS_TABLE[rank-1]||1)*seg.weight*10)/10;
-    if(!DATA.scores[e.rider]) DATA.scores[e.rider]={};
-    DATA.scores[e.rider][segName]=pts;
+    if(!DATA[scoresKey][e.rider]) DATA[scoresKey][e.rider]={};
+    DATA[scoresKey][e.rider][segName]=pts;
   });
 }
 function buildSegSelect(){
-  document.getElementById('segSel').innerHTML=SEGMENTS.map((s,i)=>`<option value="${i}">${s.name} (${s.tier==='King'?'👑 King':'Tier '+s.tier} · ×${s.weight})</option>`).join('');
-  document.getElementById('segSel').addEventListener('change',buildRiderEntry);
+  document.getElementById('segSel').innerHTML=activeSegments().map((s,i)=>`<option value="${i}">${s.name} (${s.tier==='King'?'👑 King':'Tier '+s.tier} · ×${s.weight})</option>`).join('');
+  buildRiderEntry();
 }
 function buildRiderEntry(){
+  const segs=activeSegments();
   const segIdx=parseInt(document.getElementById('segSel').value);
-  const seg=SEGMENTS[segIdx];
+  const seg=segs[segIdx];
   if(!seg) return;
-  const segTimes=SEGMENT_TIMES[seg.name]||{};
-  const riders=Object.keys(DATA.scores).sort();
+  const segTimes=activeTimes()[seg.name]||{};
+  const roster=activeRosterFilter();
+  const riders=roster?roster.slice().sort():Object.keys(DATA[activeScoresKey()]||{}).sort();
   document.getElementById('riderEntry').innerHTML=riders.map(r=>{
     const col=RIDER_COLORS[r]||'#888';
     const curTime=segTimes[r]||'';
@@ -928,7 +989,7 @@ function parsePaste(){
 }
 function buildPreview(){
   const segIdx=parseInt(document.getElementById('segSel').value);
-  const seg=SEGMENTS[segIdx];
+  const seg=activeSegments()[segIdx];
   const inputs=[...document.querySelectorAll('.entry-time')];
   const times={};
   inputs.forEach(inp=>{const t=inp.value.trim();if(t)times[inp.dataset.rider]=t;});
@@ -952,25 +1013,27 @@ function buildPreview(){
 }
 async function saveResults(){
   const segIdx=parseInt(document.getElementById('segSel').value);
-  const seg=SEGMENTS[segIdx];
+  const seg=activeSegments()[segIdx];
   document.getElementById('saveBtn').disabled=true;
   showStatus('saveStatus','info','<span class="spinner"></span> Saving...');
   const before=getRanked().map(r=>({name:r.name,pts:r.pts}));
   const inputs=[...document.querySelectorAll('.entry-time')];
-  if(!SEGMENT_TIMES[seg.name]) SEGMENT_TIMES[seg.name]={};
-  inputs.forEach(inp=>{const t=inp.value.trim();if(t){SEGMENT_TIMES[seg.name][inp.dataset.rider]=t;}});
+  const times=activeTimes();
+  if(!times[seg.name]) times[seg.name]={};
+  inputs.forEach(inp=>{const t=inp.value.trim();if(t){times[seg.name][inp.dataset.rider]=t;}});
   recalcSegment(seg.name);
   const after=getRanked();
   const changes=[];
   before.forEach(b=>{const a=after.find(x=>x.name===b.name);if(a){const d=Math.round((a.pts-b.pts)*10)/10;if(d!==0)changes.push({name:b.name,d});}});
   after.forEach(a=>{if(!before.find(b=>b.name===a.name)&&a.pts>0)changes.push({name:a.name,d:a.pts});});
-  const segEntries=Object.entries(SEGMENT_TIMES[seg.name]).map(([rider,time])=>({rider,secs:timeToSecs(time)})).filter(e=>e.secs>0).sort((a,b)=>a.secs-b.secs);
+  const segEntries=Object.entries(times[seg.name]).map(([rider,time])=>({rider,secs:timeToSecs(time)})).filter(e=>e.secs>0).sort((a,b)=>a.secs-b.secs);
   const results=segEntries.map(e=>e.rider);
   const now=new Date();
-  const entry={date:now.toLocaleString('en-US',{timeZone:'America/Monterrey',month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'}),segment:seg.name,before,results,changes};
-  if(!DATA.history)DATA.history=[];
-  DATA.history.unshift(entry);
-  DATA.segmentTimes=SEGMENT_TIMES;
+  const entry={date:now.toLocaleString('en-US',{timeZone:'America/Monterrey',month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'}),segment:seg.name,before,results,changes,discipline:CURRENT_MODE};
+  const histKey=activeHistoryKey();
+  if(!DATA[histKey])DATA[histKey]=[];
+  DATA[histKey].unshift(entry);
+  DATA[activeTimesKey()]=times;
   DATA.lastSync=new Date().toISOString();
   try{
     await writeBin(DATA);
@@ -997,7 +1060,7 @@ function saveCredentials(){
 }
 function toggleAdmin(){if(IS_ADMIN){lockAdmin();return;}document.getElementById('pwModal').classList.remove('hidden');setTimeout(()=>document.getElementById('pwInput').focus(),100);}
 function checkPassword(){
-  if(document.getElementById('pwInput').value===ADMIN_PW){IS_ADMIN=true;closePwModal();showAdminUI();buildRiderEntry();}
+  if(document.getElementById('pwInput').value===ADMIN_PW){IS_ADMIN=true;closePwModal();showAdminUI();buildSegSelect();}
   else{showStatus('pwStatus','err','Wrong password');document.getElementById('pwInput').value='';}
 }
 function closePwModal(){document.getElementById('pwModal').classList.add('hidden');document.getElementById('pwInput').value='';document.getElementById('pwStatus').className='status-bar';}
@@ -1015,6 +1078,27 @@ function switchTab(name){
   document.getElementById('tab-'+name).classList.add('active');
   document.querySelector(`.tab[data-tab="${name}"]`)?.classList.add('active');
 }
+function renderActiveTab(){
+  const activeSection=document.querySelector('.section.active');
+  if(!activeSection) return;
+  const id=activeSection.id;
+  if(id==='tab-standings'){renderBarChart();renderStandings();}
+  else if(id==='tab-profile'){renderProfileSelect();renderProfile();}
+  else if(id==='tab-compare'){renderCompareSelects();renderCompare();}
+  else if(id==='tab-update'){buildSegSelect();}
+  else if(id==='tab-segments'){renderSegments();}
+  else if(id==='tab-history'){renderHistory();}
+  else if(id==='tab-rules'){renderRules();}
+}
+function setMode(mode){
+  if(mode===CURRENT_MODE) return;
+  CURRENT_MODE=mode;
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));
+  closeSegLb();
+  renderActiveTab();
+  renderProfileSelect();
+  renderCompareSelects();
+}
 document.querySelectorAll('.tab').forEach(t=>{
   t.addEventListener('click',()=>{
     const name=t.dataset.tab;
@@ -1025,6 +1109,7 @@ document.querySelectorAll('.tab').forEach(t=>{
     if(name==='rules')renderRules();
     if(name==='profile')renderProfileSelect();
     if(name==='compare')renderCompareSelects();
+    if(name==='update')buildSegSelect();
   });
 });
 const PUBLIC_BIN_ID = '69fd24f0250b1311c31bd7ec';
@@ -1033,9 +1118,9 @@ const ADMIN_PW = '012305';
 const MASTER_KEY = '$2a$10$CtbbTDwG/SQHvUzyIw5x7ev0MGdo/GWxUsTNPRktsczijltf2iKmO';
 CFG = { binId: PUBLIC_BIN_ID, masterKey: MASTER_KEY, adminPw: ADMIN_PW };
 buildSegSelect();
+document.getElementById('segSel').addEventListener('change',buildRiderEntry);
 fetchAndRender();
 setInterval(()=>{if(!IS_ADMIN)fetchAndRender();},60000);
-
 </script>
 </body>
 </html>
