@@ -494,7 +494,7 @@ function loadCfg(){try{CFG=JSON.parse(localStorage.getItem('dcc_cfg')||'{}');}ca
 function saveCfg(){localStorage.setItem('dcc_cfg',JSON.stringify(CFG));}
 const BIN_BASE='https://api.jsonbin.io/v3';
 async function readBin(){
-  const r=await fetch(`${BIN_BASE}/b/${CFG.binId}/latest`,{headers:{'X-Master-Key':CFG.masterKey}});
+  const r=await fetch(`${BIN_BASE}/b/${CFG.binId}/latest`);
   if(!r.ok)throw new Error(`Read error: ${r.status}`);
   return (await r.json()).record;
 }
