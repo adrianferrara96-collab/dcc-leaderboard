@@ -15,6 +15,7 @@ const RIDERS = [
   { name: 'Gera',    envToken: 'STRAVA_REFRESH_TOKEN_GERA'    },
   { name: 'Pato',    envToken: 'STRAVA_REFRESH_TOKEN_PATO'    },
   { name: 'Dago',    envToken: 'STRAVA_REFRESH_TOKEN_DAGO'    },
+  { name: 'CDP',     envToken: 'STRAVA_REFRESH_TOKEN_CDP'     },
 ];
 // ─── MTB ROSTER ───────────────────────────────────────────────────────────────
 // Only these riders count for MTB (not everyone who rides Ruta rides MTB).
