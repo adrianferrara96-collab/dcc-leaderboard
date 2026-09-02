@@ -26,5 +26,6 @@ jobs:
           STRAVA_REFRESH_TOKEN_GUZMAN: ${{ secrets.STRAVA_REFRESH_TOKEN_GUZMAN }}
           STRAVA_REFRESH_TOKEN_GERA: ${{ secrets.STRAVA_REFRESH_TOKEN_GERA }}
           STRAVA_REFRESH_TOKEN_PATO: ${{ secrets.STRAVA_REFRESH_TOKEN_PATO }}
+          STRAVA_REFRESH_TOKEN_CDP: ${{ secrets.STRAVA_REFRESH_TOKEN_CDP }}
           JSONBIN_MASTER_KEY: ${{ secrets.JSONBIN_MASTER_KEY }}
         run: node sync_strava.js
