@@ -5,7 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DCC Leaderboard 2026</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap"></noscript>
 <style>
 :root{
   --orange:#D8722F;--orange-l:#E8893F;
@@ -494,9 +496,23 @@ function loadCfg(){try{CFG=JSON.parse(localStorage.getItem('dcc_cfg')||'{}');}ca
 function saveCfg(){localStorage.setItem('dcc_cfg',JSON.stringify(CFG));}
 const BIN_BASE='https://api.jsonbin.io/v3';
 async function readBin(){
-  const r=await fetch(`${BIN_BASE}/b/${CFG.binId}/latest`);
-  if(!r.ok)throw new Error(`Read error: ${r.status}`);
-  return (await r.json()).record;
+  const attemptOnce=async()=>{
+    const controller=new AbortController();
+    const timeoutId=setTimeout(()=>controller.abort(),8000);
+    try{
+      const r=await fetch(`${BIN_BASE}/b/${CFG.binId}/latest`,{signal:controller.signal});
+      if(!r.ok)throw new Error(`Read error: ${r.status}`);
+      return (await r.json()).record;
+    }finally{
+      clearTimeout(timeoutId);
+    }
+  };
+  let lastErr;
+  for(let i=0;i<3;i++){
+    try{ return await attemptOnce(); }
+    catch(e){ lastErr=e; if(i<2) await new Promise(res=>setTimeout(res,1000*(i+1))); }
+  }
+  throw lastErr;
 }
 async function writeBin(d){
   const r=await fetch(`${BIN_BASE}/b/${CFG.binId}`,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':CFG.masterKey},body:JSON.stringify(d)});
@@ -514,8 +530,9 @@ async function fetchAndRender(){
     const lastSync=DATA.lastSync?new Date(DATA.lastSync).toLocaleString('en-US',{timeZone:'America/Monterrey',month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'}):'';
     document.getElementById('lastUpd').textContent=lastSync?'Updated: '+lastSync:'Season loaded ✓';
     renderAll();
-  }catch(e){
-    document.getElementById('standingsEl').innerHTML=`<div class="empty"><h3>Could not load</h3><p>${e.message}</p></div>`;
+   }catch(e){
+    const msg=e.name==='AbortError'?'Se tardó demasiado en responder. Revisa tu conexión.':e.message;
+    document.getElementById('standingsEl').innerHTML=`<div class="empty"><h3>No se pudo cargar</h3><p>${msg}</p><button onclick="fetchAndRender()" style="margin-top:10px;padding:8px 16px;border-radius:8px;border:none;background:var(--orange);color:#000;font-weight:600;cursor:pointer;">Reintentar</button></div>`;
   }
 }
 function calcTotals(){
