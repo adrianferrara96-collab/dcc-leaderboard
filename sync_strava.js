@@ -20,7 +20,7 @@ const RIDERS = [
 // ─── MTB ROSTER ───────────────────────────────────────────────────────────────
 // Only these riders count for MTB (not everyone who rides Ruta rides MTB).
 // Diego and Dago are intentionally excluded here even though they're in RIDERS above.
-const MTB_RIDER_NAMES = ['Ferrara', 'Miller', 'Color', 'Apo', 'Aguirre', 'Guzman', 'Gera', 'Pato'];
+const MTB_RIDER_NAMES = ['Ferrara', 'Miller', 'Color', 'Apo', 'Aguirre', 'Guzman', 'Gera', 'Pato', 'CDP'];
 // ─── SEGMENTS (Ruta) ─────────────────────────────────────────────────────────
 const SEGMENTS = [
   { name: "Olinalá",                  id: 1446208,   weight: 1.1, tier: "King" },
