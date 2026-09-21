@@ -495,8 +495,9 @@ let IS_ADMIN=false;
 function loadCfg(){try{CFG=JSON.parse(localStorage.getItem('dcc_cfg')||'{}');}catch(e){}CFG.binId=CFG.binId||'';CFG.masterKey=CFG.masterKey||'';CFG.adminPw=CFG.adminPw||'';}
 function saveCfg(){localStorage.setItem('dcc_cfg',JSON.stringify(CFG));}
 const BIN_BASE='https://api.jsonbin.io/v3';
-async function readBin(){
-  const attemptOnce=async()=>{
+async function readBin(onStatus){
+  const attemptOnce=async(attempt)=>{
+    if(onStatus) onStatus(`Cargando… intento ${attempt} de 3`);
     const controller=new AbortController();
     const timeoutId=setTimeout(()=>controller.abort(),8000);
     try{
@@ -509,8 +510,12 @@ async function readBin(){
   };
   let lastErr;
   for(let i=0;i<3;i++){
-    try{ return await attemptOnce(); }
-    catch(e){ lastErr=e; if(i<2) await new Promise(res=>setTimeout(res,1000*(i+1))); }
+    try{ return await attemptOnce(i+1); }
+    catch(e){
+      lastErr=e;
+      console.error(`[DCC] intento ${i+1} falló:`, e.name, e.message);
+      if(i<2) await new Promise(res=>setTimeout(res,1000*(i+1)));
+    }
   }
   throw lastErr;
 }
@@ -519,8 +524,12 @@ async function writeBin(d){
   if(!r.ok)throw new Error(`Write error: ${r.status}`);
 }
 async function fetchAndRender(){
+  const setLoading=msg=>{
+    const el=document.getElementById('standingsEl');
+    if(el && el.querySelector('.empty')) el.innerHTML=`<div class="empty"><span class="spinner"></span> ${msg}</div>`;
+  };
   try{
-    DATA=await readBin();
+    DATA=await readBin(setLoading);
     if(!DATA.history) DATA.history=[];
     if(!DATA.mtbHistory) DATA.mtbHistory=[];
     if(!DATA.scores) DATA.scores={};
@@ -531,8 +540,10 @@ async function fetchAndRender(){
     document.getElementById('lastUpd').textContent=lastSync?'Updated: '+lastSync:'Season loaded ✓';
     renderAll();
    }catch(e){
-    const msg=e.name==='AbortError'?'Se tardó demasiado en responder. Revisa tu conexión.':e.message;
-    document.getElementById('standingsEl').innerHTML=`<div class="empty"><h3>No se pudo cargar</h3><p>${msg}</p><button onclick="fetchAndRender()" style="margin-top:10px;padding:8px 16px;border-radius:8px;border:none;background:var(--orange);color:#000;font-weight:600;cursor:pointer;">Reintentar</button></div>`;
+    console.error('[DCC] fetchAndRender falló:', e.name, e.message);
+    const detail=`${e.name}: ${e.message}`;
+    const msg=e.name==='AbortError'?'Se tardó demasiado en responder. Revisa tu conexión.':detail;
+    document.getElementById('standingsEl').innerHTML=`<div class="empty"><h3>No se pudo cargar</h3><p>${msg}</p><p style="font-size:10px;color:var(--gl);margin-top:4px;">${new Date().toLocaleTimeString()}</p><button onclick="fetchAndRender()" style="margin-top:10px;padding:8px 16px;border-radius:8px;border:none;background:var(--orange);color:#000;font-weight:600;cursor:pointer;">Reintentar</button></div>`;
   }
 }
 function calcTotals(){
