@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DCC Leaderboard 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap"></noscript>
+<style>
+:root{
+  --orange:#D8722F;--orange-l:#E8893F;
+  --dark:#F3EEE3;       /* page background - warm cream */
+  --d2:#FBF8F2;         /* card surface - light cream */
+  --d3:#F0E9DB;         /* raised / hover */
+  --d4:#E2D8C6;         /* borders */
+  --d5:#D0C3AC;         /* stronger borders */
+  --gray:#9A8C76;       /* muted text */
+  --gl:#BCAE96;         /* faint text */
+  --white:#2A2018;      /* primary text - dark brown */
+  --green:#1D9E75;--red:#C0392B;
+  --gold:#C9A227;--silver:#9AA0A8;--bronze:#B5732F;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--dark);color:var(--white);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;}
+header{padding:1.25rem 2rem;border-bottom:1px solid var(--d4);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;position:sticky;top:0;z-index:50;background:rgba(243,238,227,.96);backdrop-filter:blur(12px);}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:2.4rem;letter-spacing:.06em;line-height:1;}
+.logo em{color:var(--orange);font-style:normal;}
+.badge{background:var(--orange);color:#fff;font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;padding:2px 7px;border-radius:2px;margin-left:8px;vertical-align:middle;}
+.hdr-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.last-upd{font-size:11px;color:var(--gray);}
+.readonly-notice{font-size:10px;color:var(--gl);background:var(--d3);border:1px solid var(--d4);border-radius:3px;padding:3px 8px;letter-spacing:.06em;text-transform:uppercase;}
+.admin-btn{font-size:11px;color:var(--gray);cursor:pointer;padding:5px 12px;border:1px solid var(--d4);border-radius:4px;background:none;font-family:'DM Sans',sans-serif;transition:all .15s;letter-spacing:.04em;}
+.admin-btn:hover{color:var(--white);border-color:var(--gl);}
+.admin-btn.active{color:var(--orange);border-color:var(--orange);}
+.tabs{display:flex;border-bottom:1px solid var(--d4);padding:0 2rem;overflow-x:auto;background:var(--dark);}
+.tab{padding:.7rem 1.1rem;font-size:11px;font-weight:600;color:var(--gray);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;letter-spacing:.07em;text-transform:uppercase;user-select:none;white-space:nowrap;}
+.tab:hover{color:var(--white);}
+.tab.active{color:var(--orange);border-bottom-color:var(--orange);}
+.mode-bar{display:flex;gap:8px;margin-bottom:1.25rem;}
+.mode-btn{flex:0 0 auto;padding:.55rem 1.4rem;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--d4);border-radius:7px;background:var(--d2);color:var(--gray);cursor:pointer;transition:all .15s;font-family:'DM Sans',sans-serif;}
+.mode-btn:hover{color:var(--white);border-color:var(--d5);}
+.mode-btn.active{background:var(--orange);border-color:var(--orange);color:#fff;}
+@media(max-width:480px){.mode-bar{gap:6px;margin-bottom:1rem;}.mode-btn{flex:1;padding:.5rem .5rem;font-size:10px;}}
+main{padding:1.5rem 2rem;max-width:1140px;margin:0 auto;}
+.section{display:none;}
+.section.active{display:block;}
+.sum-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1.5rem;}
+@media(max-width:600px){.sum-bar{grid-template-columns:repeat(2,1fr);}}
+.sum-card{background:var(--d2);border:1px solid var(--d4);border-radius:8px;padding:.9rem 1rem;text-align:center;}
+.sum-val{font-family:'Bebas Neue',sans-serif;font-size:2rem;color:var(--white);line-height:1;}
+.sum-lbl{font-size:10px;color:var(--gray);text-transform:uppercase;letter-spacing:.1em;margin-top:3px;}
+.chart-wrap{background:var(--d2);border:1px solid var(--d4);border-radius:10px;padding:1.5rem;margin-bottom:1.5rem;}
+.chart-title{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--orange);font-weight:600;margin-bottom:1.25rem;}
+.bar-row{display:grid;grid-template-columns:90px 1fr 70px;align-items:center;gap:10px;margin-bottom:8px;}
+.bar-name{font-size:13px;font-weight:500;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bar-track{background:var(--d4);border-radius:3px;height:22px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:3px;transition:width .8s cubic-bezier(.4,0,.2,1);display:flex;align-items:center;padding-left:8px;font-size:11px;font-weight:600;color:var(--white);white-space:nowrap;min-width:4px;}
+.bar-pts{font-family:"Bebas Neue",sans-serif;font-size:1.1rem;text-align:right;white-space:nowrap;min-width:80px;}
+.standings{display:flex;flex-direction:column;gap:5px;}
+.r-row{display:grid;grid-template-columns:44px 1fr 130px 100px 36px;align-items:center;background:var(--d2);border:1px solid var(--d4);border-radius:8px;padding:11px 14px;transition:all .15s;cursor:pointer;}
+.r-row:hover{background:var(--d3);border-color:var(--d5);}
+.r-row.top1{border-color:rgba(245,200,66,.4);background:rgba(245,200,66,.04);}
+.r-row.top2{border-color:rgba(176,184,193,.2);}
+.r-row.top3{border-color:rgba(205,127,50,.25);}
+@media(max-width:650px){.r-row{grid-template-columns:36px 1fr 100px 36px;}.change-col{display:none;}}
+.rank-n{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--gl);text-align:center;}
+.top1 .rank-n{color:var(--gold);}.top2 .rank-n{color:var(--silver);}.top3 .rank-n{color:var(--bronze);}
+.r-info{display:flex;align-items:center;gap:10px;}
+.avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;}
+.r-name{font-weight:600;font-size:14px;display:flex;align-items:center;gap:6px;}
+.sync-dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0;}
+.sync-auto{background:var(--green);box-shadow:0 0 4px var(--green);}
+.sync-manual{background:var(--gl);}
+.r-sub{font-size:11px;color:var(--gray);margin-top:1px;}
+.pts-col{text-align:right;}
+.pts-big{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;line-height:1;}
+.pts-lbl{font-size:10px;color:var(--gray);text-transform:uppercase;letter-spacing:.08em;}
+.change-col{text-align:right;}
+.chg-pts{font-size:12px;font-weight:600;}
+.chg-pos{font-size:11px;color:var(--gray);margin-top:1px;}
+.up{color:var(--green);}.dn{color:var(--red);}.neu{color:var(--gray);}
+.medal-col{text-align:center;font-size:17px;}
+.breakdown{display:none;background:var(--d3);border:1px solid var(--d4);border-radius:0 0 8px 8px;padding:.9rem 1.25rem;margin-top:-5px;margin-bottom:4px;}
+.breakdown.open{display:block;}
+.bd-title{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--gray);margin-bottom:8px;}
+.chips{display:flex;flex-wrap:wrap;gap:5px;}
+.chip{background:var(--d4);border-radius:4px;padding:4px 9px;font-size:11px;display:flex;align-items:center;gap:5px;}
+.chip-seg{color:var(--gray);}
+.chip-pts{font-weight:700;color:var(--orange);}
+.profile-header{background:var(--d2);border:1px solid var(--d4);border-radius:10px;padding:1.5rem;margin-bottom:1rem;display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;}
+.profile-avatar{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;flex-shrink:0;}
+.profile-name{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;line-height:1;}
+.profile-rank{font-size:13px;color:var(--gray);margin-top:2px;}
+.profile-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;flex:1;min-width:240px;}
+.pstat{background:var(--d3);border-radius:6px;padding:.75rem;text-align:center;}
+.pstat-val{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;line-height:1;}
+.pstat-lbl{font-size:10px;color:var(--gray);text-transform:uppercase;letter-spacing:.08em;margin-top:2px;}
+.seg-table{width:100%;border-collapse:collapse;}
+.seg-table th{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--gray);padding:8px 12px;text-align:left;border-bottom:1px solid var(--d4);}
+.seg-table th:last-child,.seg-table td:last-child{text-align:right;}
+.seg-table td{padding:9px 12px;font-size:13px;border-bottom:1px solid var(--d3);vertical-align:middle;}
+.seg-table tr:last-child td{border-bottom:none;}
+.seg-table tr:hover td{background:var(--d3);}
+.tier-pill{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:2px 6px;border-radius:3px;}
+.tKing{background:rgba(245,200,66,.15);color:var(--gold);}
+.t1{background:rgba(232,84,10,.15);color:var(--orange-l);}
+.t2{background:rgba(52,152,219,.15);color:#5DADE2;}
+.t3{background:rgba(39,174,96,.15);color:#2ECC71;}
+.t4{background:rgba(119,119,119,.15);color:var(--gray);}
+.rider-select-wrap{margin-bottom:1.25rem;}
+.rider-select-wrap select{max-width:280px;background:var(--d2);border:1px solid var(--d4);color:var(--white);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;border-radius:6px;padding:10px 14px;outline:none;transition:border-color .15s;width:100%;}
+.rider-select-wrap select:focus{border-color:var(--orange);}
+.seg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px;}
+.seg-card{background:var(--d2);border:1px solid var(--d4);border-radius:8px;padding:.9rem;cursor:pointer;transition:all .15s;}
+.seg-card:hover{background:var(--d3);border-color:var(--d5);}
+.seg-card.active-seg{border-color:var(--orange);background:rgba(232,84,10,.06);}
+.tier-divider{display:flex;align-items:center;gap:8px;margin:14px 0 6px;grid-column:1/-1;}.tier-divider span{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--orange);white-space:nowrap;}.tier-divider::before,.tier-divider::after{content:'';flex:1;height:1px;background:var(--d4);}
+.zone-header{grid-column:1/-1;display:flex;align-items:baseline;gap:10px;margin:22px 0 2px;padding-bottom:6px;border-bottom:2px solid var(--orange);}
+.zone-header:first-child{margin-top:0;}
+.zone-header h2{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:.05em;color:var(--white);line-height:1;}
+.zone-header span{font-size:11px;color:var(--gray);}
+.seg-card-name{font-weight:600;font-size:13px;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.strava-link{display:inline-flex;align-items:center;margin-left:auto;opacity:0.7;transition:opacity .15s;flex-shrink:0;}
+.strava-link:hover{opacity:1;}
+.strava-link svg{width:16px;height:16px;}
+.seg-meta{display:flex;gap:6px;align-items:center;}
+.wval{font-size:11px;color:var(--gray);}
+.seg-leader{font-size:11px;color:var(--gray);margin-top:6px;}
+.seg-click-hint{font-size:10px;color:var(--gl);margin-top:5px;letter-spacing:.04em;}
+.seg-lb-panel{background:var(--d2);border:1px solid var(--orange);border-radius:10px;padding:1rem;margin-bottom:1.25rem;display:none;width:100%;box-sizing:border-box;}
+.seg-lb-panel.open{display:block;}
+.seg-lb-title{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;margin-bottom:.25rem;}
+.seg-lb-meta{font-size:11px;color:var(--gray);margin-bottom:1rem;}
+.seg-lb-row{display:grid;grid-template-columns:28px 1fr 58px 58px 44px;align-items:center;gap:6px;padding:7px 8px;border-radius:6px;margin-bottom:4px;background:var(--d3);}
+.seg-lb-row.slb-1{background:rgba(245,200,66,.07);border:1px solid rgba(245,200,66,.25);}
+.seg-lb-row.slb-2{background:rgba(176,184,193,.05);border:1px solid rgba(176,184,193,.15);}
+.seg-lb-row.slb-3{background:rgba(205,127,50,.06);border:1px solid rgba(205,127,50,.2);}
+.slb-rank{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:var(--gl);text-align:center;}
+.slb-1 .slb-rank{color:var(--gold);}.slb-2 .slb-rank{color:var(--silver);}.slb-3 .slb-rank{color:var(--bronze);}
+.slb-rider{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;}
+.slb-pts{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;text-align:right;}
+.no-data-row{font-size:12px;color:var(--gl);padding:.5rem;text-align:center;}
+@media(max-width:480px){
+  .seg-lb-panel{border-radius:8px;padding:.75rem;}
+  .seg-lb-row{grid-template-columns:24px 1fr 52px 52px 36px !important;gap:4px;padding:6px 6px;}
+  .slb-rank{font-size:1rem;}
+  .slb-pts{font-size:.9rem;}
+  .seg-lb-title{font-size:1.2rem;}
+  #segGrid{grid-template-columns:1fr;}
+}
+.hist-list{display:flex;flex-direction:column;gap:8px;}
+.hist-entry{background:var(--d2);border:1px solid var(--d4);border-radius:8px;padding:1rem 1.4rem;}
+.hist-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.hist-seg{font-weight:600;color:var(--orange-l);font-size:13px;}
+.hist-date{font-size:11px;color:var(--gray);}
+.hist-changes{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}
+.hc{font-size:11px;padding:3px 8px;border-radius:3px;background:var(--d3);}
+.rules-layout{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start;}
+@media(max-width:700px){.rules-layout{grid-template-columns:1fr;}}
+.rules-card{background:var(--d2);border:1px solid var(--d4);border-radius:10px;padding:1.5rem;}
+.rules-title{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:var(--white);margin-bottom:1rem;letter-spacing:.04em;}
+.rules-subtitle{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--orange);font-weight:600;margin-bottom:.75rem;}
+.pts-table{width:100%;border-collapse:collapse;}
+.pts-table td{padding:6px 10px;font-size:13px;border-bottom:1px solid var(--d3);}
+.pts-table tr:last-child td{border-bottom:none;}
+.pts-table .pos{color:var(--gray);width:50px;}
+.pts-table .pts{font-weight:700;color:var(--orange);text-align:right;}
+.tier-row{display:flex;align-items:flex-start;justify-content:space-between;padding:10px 12px;background:var(--d3);border-radius:6px;margin-bottom:6px;gap:8px;}
+.tier-info{flex:1;}
+.tier-mult{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--orange);flex-shrink:0;}
+.tier-desc{font-size:12px;color:var(--gray);margin-top:2px;}
+.tier-segs{font-size:10px;color:var(--gl);margin-top:4px;line-height:1.5;}
+.upd-layout{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start;}
+@media(max-width:700px){.upd-layout{grid-template-columns:1fr;}}
+.card{background:var(--d2);border:1px solid var(--d4);border-radius:10px;padding:1.5rem;}
+.card-title{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--orange);margin-bottom:.9rem;font-weight:600;}
+label{font-size:11px;color:var(--gray);display:block;margin-bottom:5px;margin-top:12px;letter-spacing:.04em;}
+label:first-of-type{margin-top:0;}
+select{width:100%;background:var(--d3);border:1px solid var(--d4);color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;border-radius:6px;padding:9px 11px;outline:none;transition:border-color .15s;}
+select:focus{border-color:var(--orange);}
+select option{background:var(--d2);}
+input[type=text],input[type=password],textarea{width:100%;background:var(--d3);border:1px solid var(--d4);color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;border-radius:6px;padding:9px 11px;outline:none;transition:border-color .15s;margin-top:5px;}
+input:focus,textarea:focus{border-color:var(--orange);}
+.divider{border:none;border-top:1px solid var(--d4);margin:1rem 0;}
+.entry-list{display:flex;flex-direction:column;gap:5px;margin-top:10px;max-height:420px;overflow-y:auto;}
+.entry-row{display:flex;align-items:center;gap:9px;background:var(--d3);border:1px solid var(--d4);border-radius:5px;padding:7px 10px;}
+.btn{display:block;width:100%;background:var(--orange);color:#fff;border:none;border-radius:6px;padding:10px 18px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s;letter-spacing:.04em;margin-top:10px;}
+.btn:hover{background:var(--orange-l);}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.btn-sec{background:var(--d4);color:var(--white);}
+.btn-sec:hover{background:var(--d5);}
+.btn-green{background:var(--green);color:#fff;}
+.btn-green:hover{background:#2ecc71;}
+.preview-row{display:flex;align-items:center;justify-content:space-between;background:var(--d3);border-radius:4px;padding:5px 9px;font-size:12px;margin-bottom:3px;}
+.prev-pos{color:var(--gray);width:20px;}
+.prev-pts{color:var(--orange);font-weight:700;}
+.modal-bg{position:fixed;inset:0;background:rgba(42,32,24,.55);display:flex;align-items:center;justify-content:center;z-index:100;padding:1rem;}
+.modal-bg.hidden{display:none;}
+.modal{background:var(--d2);border:1px solid var(--d4);border-radius:12px;padding:1.75rem;width:100%;max-width:440px;}
+.modal h3{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;margin-bottom:.3rem;}
+.modal p{font-size:13px;color:var(--gray);margin-bottom:1rem;line-height:1.6;}
+.modal-btns{display:flex;gap:8px;margin-top:10px;}
+.modal-btns .btn{margin-top:0;}
+.status-bar{font-size:12px;padding:9px 12px;border-radius:5px;margin-top:8px;display:none;}
+.status-bar.show{display:block;}
+.status-bar.ok{background:rgba(39,174,96,.1);border:1px solid rgba(39,174,96,.3);color:#2ecc71;}
+.status-bar.err{background:rgba(192,57,43,.1);border:1px solid rgba(192,57,43,.3);color:#e74c3c;}
+.status-bar.info{background:rgba(232,84,10,.1);border:1px solid rgba(232,84,10,.3);color:var(--orange-l);}
+.spinner{display:inline-block;width:12px;height:12px;border:2px solid rgba(232,84,10,.3);border-top-color:var(--orange);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:5px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.empty{text-align:center;padding:3rem 2rem;color:var(--gray);}
+.empty h3{font-size:1rem;color:var(--gl);margin-bottom:.3rem;}
+/* ── MOBILE POLISH (iPhone) ─────────────────────────────── */
+@media(max-width:480px){
+  header{padding:0.9rem 1rem;}
+  .logo{font-size:1.9rem;}
+  main{padding:1rem 0.85rem;}
+  .tabs{padding:0 0.85rem;}
+  .tab{padding:.6rem .8rem;font-size:10px;}
+  .last-upd{font-size:10px;width:100%;order:3;}
+  .sum-bar{gap:6px;}
+  .sum-val{font-size:1.6rem;}
+  .chart-wrap{padding:1rem;}
+  .bar-row{grid-template-columns:64px 1fr 52px;gap:7px;}
+  .bar-name{font-size:11px;}
+  .bar-pts{font-size:.95rem;min-width:48px;}
+  .r-row{padding:10px 11px;}
+  .rank-n{font-size:1.3rem;}
+  .r-name{font-size:13px;}
+  .pts-big{font-size:1.3rem;}
+  .avatar{width:30px;height:30px;font-size:10px;}
+  .profile-header{padding:1.1rem;gap:1rem;}
+  .profile-name{font-size:1.8rem;}
+  .profile-stats{min-width:0;width:100%;}
+  .pstat-val{font-size:1.35rem;}
+  .seg-table th,.seg-table td{padding:7px 8px;font-size:12px;}
+  .seg-table th{font-size:9px;}
+  .card{padding:1.1rem;}
+  .chip{font-size:10px;padding:3px 7px;}
+  /* bump the very smallest fonts up a touch for legibility */
+  .sync-dot{width:8px;height:8px;}
+}
+</style>
+</head>
+<body>
+<div class="modal-bg hidden" id="pwModal">
+  <div class="modal">
+    <h3>🔐 Admin Access</h3>
+    <p>Enter the admin password to unlock editing.</p>
+    <input type="password" id="pwInput" placeholder="Password..." onkeydown="if(event.key==='Enter')checkPassword()">
+    <div class="status-bar" id="pwStatus"></div>
+    <div class="modal-btns">
+      <button class="btn" onclick="checkPassword()">Unlock</button>
+      <button class="btn btn-sec" onclick="closePwModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+<header>
+  <div class="logo">DCC<em>.</em> <em>Leaderboard</em><span class="badge">2026</span></div>
+  <div class="hdr-right">
+    <span class="last-upd" id="lastUpd">Loading...</span>
+    <span class="readonly-notice" id="readonlyNotice">👁 View only</span>
+    <button class="admin-btn" id="adminToggleBtn" onclick="toggleAdmin()">🔐 Admin</button>
+  </div>
+</header>
+<nav class="tabs">
+  <div class="tab active" data-tab="standings">🏆 Standings</div>
+  <div class="tab" data-tab="profile">👤 My Profile</div>
+  <div class="tab" data-tab="compare">⚔️ Compare</div>
+  <div class="tab" data-tab="update" id="updateTab" style="display:none;">📥 Update</div>
+  <div class="tab" data-tab="segments">🗺️ Segments</div>
+  <div class="tab" data-tab="history">📈 History</div>
+  <div class="tab" data-tab="rules">📋 Rules</div>
+</nav>
+<main>
+  <div class="mode-bar">
+    <button class="mode-btn active" data-mode="road" onclick="setMode('road')">🚴 Ruta</button>
+    <button class="mode-btn" data-mode="mtb" onclick="setMode('mtb')">🚵 MTB</button>
+  </div>
+  <div class="section active" id="tab-standings">
+    <div class="sum-bar" id="sumBar"></div>
+    <div class="chart-wrap">
+      <div class="chart-title">📊 Points — 2026 Season</div>
+      <div id="barChart"></div>
+    </div>
+    <div class="standings" id="standingsEl">
+      <div class="empty"><span class="spinner"></span> Loading...</div>
+    </div>
+  </div>
+  <div class="section" id="tab-profile">
+    <div class="rider-select-wrap">
+      <select id="riderProfileSel" onchange="renderProfile()">
+        <option value="">— Select your rider —</option>
+      </select>
+    </div>
+    <div id="profileContent"></div>
+  </div>
+  <div class="section" id="tab-compare">
+    <div style="display:flex;gap:10px;margin-bottom:1.25rem;flex-wrap:wrap;">
+      <select id="cmpA" onchange="renderCompare()" style="flex:1;min-width:140px;max-width:280px;background:var(--d2);border:1px solid var(--d4);color:var(--white);font-weight:600;border-radius:6px;padding:10px 14px;"><option value="">— Rider A —</option></select>
+      <select id="cmpB" onchange="renderCompare()" style="flex:1;min-width:140px;max-width:280px;background:var(--d2);border:1px solid var(--d4);color:var(--white);font-weight:600;border-radius:6px;padding:10px 14px;"><option value="">— Rider B —</option></select>
+    </div>
+    <div id="compareContent"></div>
+  </div>
+  <div class="section" id="tab-update">
+    <div class="upd-layout">
+      <div class="card">
+        <div class="card-title">📥 Log new times</div>
+        <label>1. Select segment</label>
+        <select id="segSel"></select>
+        <label style="margin-top:12px;">⚡ Quick paste (optional)</label>
+        <textarea id="pasteBox" placeholder="Paste raw Strava leaderboard text here, then click Parse..." style="min-height:80px;resize:vertical;"></textarea>
+        <button class="btn btn-sec" onclick="parsePaste()" style="margin-top:6px;">⚡ Parse pasted text</button>
+        <div class="status-bar" id="parseStatus"></div>
+        <label style="margin-top:12px;">2. Enter / edit times (MM:SS) — blank = no time</label>
+        <div class="entry-list" id="riderEntry"></div>
+        <hr class="divider">
+        <div id="previewWrap" style="display:none;">
+          <div style="font-size:10px;color:var(--gray);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Segment ranking preview</div>
+          <div id="previewList"></div>
+          <button class="btn btn-green" id="saveBtn" onclick="saveResults()">✅ Save &amp; re-rank segment</button>
+        </div>
+        <button class="btn" onclick="buildPreview()" style="margin-top:10px;">👁 Preview ranking</button>
+        <div class="status-bar" id="saveStatus"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">ℹ️ How it works</div>
+        <p style="font-size:12px;color:var(--gray);line-height:1.8;">Pick a segment, then enter each rider's new personal-best time for the year. Paste raw Strava text to auto-fill. On save, the whole segment re-ranks against all stored times and points redistribute.</p>
+        <p style="font-size:12px;color:var(--gray);line-height:1.8;margin-top:8px;"><span style="color:var(--green);">●auto</span> riders sync from Strava daily. <span style="color:var(--gray);">○manual</span> riders need times entered here.</p>
+        <hr class="divider">
+        <div class="card-title">⚙️ Settings</div>
+        <button class="btn btn-sec" style="margin-top:0;" onclick="lockAdmin()">🔒 Lock admin</button>
+        <button class="btn btn-sec" onclick="resetData()" style="margin-top:6px;">↩ Reset to baseline</button>
+        <hr class="divider">
+        <div class="card-title">🔗 JSONBin Credentials</div>
+        <p style="font-size:11px;color:var(--gray);margin-bottom:8px;">Enter your Master Key and admin password to reconnect on this device.</p>
+        <label>Master Key</label>
+        <input type="text" id="cfgMasterKey" placeholder="$2a$10$..." style="margin-top:4px;">
+        <label>Admin Password</label>
+        <input type="password" id="cfgAdminPw" placeholder="Your admin password..." style="margin-top:4px;">
+        <div class="status-bar" id="cfgStatus"></div>
+        <button class="btn btn-green" style="margin-top:8px;" onclick="saveCredentials()">💾 Save Credentials</button>
+      </div>
+    </div>
+  </div>
+  <div class="section" id="tab-segments">
+    <div class="seg-lb-panel" id="segLbPanel">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div>
+          <div class="seg-lb-title" id="segLbTitle"></div>
+          <div class="seg-lb-meta" id="segLbMeta"></div>
+        </div>
+        <button onclick="closeSegLb()" style="background:none;border:none;color:var(--gray);cursor:pointer;font-size:18px;padding:0 4px;">✕</button>
+      </div>
+      <div id="segLbRows"></div>
+    </div>
+    <div class="seg-grid" id="segGrid"></div>
+  </div>
+  <div class="section" id="tab-history">
+    <div class="hist-list" id="histList">
+      <div class="empty"><h3>No updates yet</h3></div>
+    </div>
+  </div>
+  <div class="section" id="tab-rules">
+    <div class="rules-layout">
+      <div class="rules-card">
+        <div class="rules-title">Points by Position</div>
+        <div class="rules-subtitle">Base points before tier multiplier</div>
+        <table class="pts-table"><tbody id="ptsTableBody"></tbody></table>
+      </div>
+      <div>
+        <div class="rules-card" style="margin-bottom:1rem;">
+          <div class="rules-title">Tier Multipliers</div>
+          <div class="rules-subtitle">Final pts = base pts × multiplier</div>
+          <div id="tierRules"></div>
+        </div>
+        <div class="rules-card">
+          <div class="rules-title">How it works</div>
+          <p style="font-size:13px;color:var(--gray);line-height:1.8;">Each segment has a tier multiplier. Finish 1st on a King segment: 30 × 1.1 = <strong style="color:var(--white)">33 pts</strong>. Only DCC members count. Times from Strava 2026 leaderboards only.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+<script>
+// ─── SEGMENTS ────────────────────────────────────────────────────────────────
+const SEGMENTS = [
+  {name:"Olinalá",loc:"Local",weight:1.1,tier:"King",strava:"https://www.strava.com/segments/1446208"},
+  {name:"Caseta - Meseta",loc:"Local",weight:1.0,tier:"1",strava:"https://www.strava.com/segments/3747852"},
+  {name:"La bella Rosario",loc:"Local",weight:1.0,tier:"1",strava:"https://www.strava.com/segments/14609872"},
+  {name:'Escalada "La Virgen"',loc:"Rayones",weight:1.0,tier:"1",strava:"https://www.strava.com/segments/2398953"},
+  {name:"Pto Genovevo",loc:"Santiago",weight:1.0,tier:"1",strava:"https://www.strava.com/segments/968817"},
+  {name:"al manzano",loc:"Santiago",weight:0.9,tier:"2",strava:"https://www.strava.com/segments/16917155"},
+  {name:"SA - Oyameles",loc:"Arteaga",weight:1.0,tier:"1",strava:"https://www.strava.com/segments/27456010"},
+  {name:"Interminable",loc:"Arteaga",weight:0.9,tier:"2",strava:"https://www.strava.com/segments/15371816"},
+  {name:"entronque hasta peñita",loc:"Arteaga",weight:0.7,tier:"4",strava:"https://www.strava.com/segments/10356906"},
+  {name:"A Peñita subida",loc:"Arteaga",weight:0.7,tier:"4",strava:"https://www.strava.com/segments/8885334"},
+  {name:"Rio pilon al 26 (duro)",loc:"Rayones",weight:0.9,tier:"2",strava:"https://www.strava.com/segments/10134690"},
+  {name:"Suchiate 2 duele más",loc:"Local",weight:0.8,tier:"3",strava:"https://www.strava.com/segments/11399480"},
+  {name:"Rosario hasta topar",loc:"Local",weight:0.8,tier:"3",strava:"https://www.strava.com/segments/34653257"},
+  {name:"Los Andes",loc:"Arteaga",weight:0.8,tier:"3",strava:"https://www.strava.com/segments/8794764"},
+  {name:"Mesa de las tablas",loc:"Arteaga",weight:0.8,tier:"3",strava:"https://www.strava.com/segments/9697356"},
+  {name:"letrero dijo paco",loc:"Arteaga",weight:0.8,tier:"3",strava:"https://www.strava.com/segments/14147860"},
+  {name:"mexico 57 climb",loc:"Arteaga",weight:0.8,tier:"3",strava:"https://www.strava.com/segments/3299743"},
+  {name:"Triple Summit",loc:"Local",weight:0.7,tier:"4",strava:"https://www.strava.com/segments/36428932"},
+  {name:"way to the tooth",loc:"Local",weight:0.7,tier:"4",strava:"https://www.strava.com/segments/13328149"},
+  {name:"OXXO-Valle Alto",loc:"Local",weight:0.7,tier:"4",strava:"https://www.strava.com/segments/10015610"},
+  {name:"Lateral Ida",loc:"Local",weight:0.8,tier:"3",strava:"https://www.strava.com/segments/12259517"},
+  {name:"La Cortina climb",loc:"Santiago",weight:0.8,tier:"3",strava:"https://www.strava.com/segments/8148112"},
+  {name:"Los encinos",loc:"Santiago",weight:0.7,tier:"4",strava:"https://www.strava.com/segments/9488733"},
+  {name:"Via Deportiva Loop",loc:"Local",weight:0.8,tier:"3",strava:"https://www.strava.com/segments/25950502"},
+  {name:"VP Climb",loc:"Local",weight:0.8,tier:"3",strava:"https://www.strava.com/segments/37538859"},
+  {name:"Huasteca",loc:"Local",weight:0.9,tier:"2",strava:"https://www.strava.com/segments/11798885"},
+];
+// ─── MTB SEGMENTS ────────────────────────────────────────────────────────────
+// tier weights mirror the road scale: 1 -> ×1.0, 2 -> ×0.9, 3 -> ×0.8 (no King/Tier4 in MTB)
+const MTB_SEGMENTS = [
+  {name:"Chile - Deslavada - Puerto del Aire",loc:"Chipinque",type:"Subida",tier:"2",weight:0.9,strava:"https://www.strava.com/segments/3519287"},
+  {name:"Brecha del Chile - Entronque San Agustin",loc:"Chipinque",type:"Subida",tier:"2",weight:0.9,strava:"https://www.strava.com/segments/7890483"},
+  {name:"Vereda La Deslavada",loc:"Chipinque",type:"Subida",tier:"1",weight:1.0,strava:"https://www.strava.com/segments/1460193"},
+  {name:"Uphill Z",loc:"Chipinque",type:"Subida",tier:"1",weight:1.0,strava:"https://www.strava.com/segments/11443806"},
+  {name:"Puerto del Aire - Pinal",loc:"Chipinque",type:"Subida",tier:"2",weight:0.9,strava:"https://www.strava.com/segments/2267492"},
+  {name:"Bebederos a Epazote",loc:"Chipinque",type:"Subida",tier:"3",weight:0.8,strava:"https://www.strava.com/segments/4648497"},
+  {name:"Coatí 3 - Downhill",loc:"Chipinque",type:"DH",tier:"1",weight:1.0,strava:"https://www.strava.com/segments/15203760"},
+  {name:"Coatí 3-2-1 downhill",loc:"Chipinque",type:"DH",tier:"3",weight:0.8,strava:"https://www.strava.com/segments/15558003"},
+  {name:"DH Moras-San Agustin",loc:"Chipinque",type:"DH",tier:"1",weight:1.0,strava:"https://www.strava.com/segments/11287426"},
+  {name:"koati chile",loc:"Chipinque",type:"DH",tier:"1",weight:1.0,strava:"https://www.strava.com/segments/12356845"},
+  {name:"DH Abrazo del Oso",loc:"Chipinque",type:"DH",tier:"2",weight:0.9,strava:"https://www.strava.com/segments/14471448"},
+  {name:"Subida Abrazo del Oso",loc:"Chipinque",type:"Subida",tier:"2",weight:0.9,strava:"https://www.strava.com/segments/13926607"},
+  {name:"Damian",loc:"Chipinque",type:"DH",tier:"3",weight:0.8,strava:"https://www.strava.com/segments/4052134"},
+  {name:"Toño 1",loc:"Chipinque",type:"DH",tier:"3",weight:0.8,strava:"https://www.strava.com/segments/9432021"},
+  {name:"Toño 2",loc:"Chipinque",type:"DH",tier:"3",weight:0.8,strava:"https://www.strava.com/segments/3016781"},
+  {name:"Ascenso Rhinos Huasteca",loc:"Huasteca",type:"Subida",tier:"1",weight:1.0,strava:"https://www.strava.com/segments/7795575"},
+  {name:"Rinos UP Virgen -> Puerto",loc:"Huasteca",type:"Subida",tier:"3",weight:0.8,strava:"https://www.strava.com/segments/10262658"},
+  {name:"Descenso Rinos desde la virgen",loc:"Huasteca",type:"DH",tier:"1",weight:1.0,strava:"https://www.strava.com/segments/9147011"},
+];
+const ZONE_ORDER = { road:['Local','Santiago','Rayones','Arteaga'], mtb:['Chipinque','Huasteca'] };
+const MTB_RIDERS = ['Ferrara','Miller','Color','Apo','Aguirre','Guzman','Gera','Pato','CDP'];
+// Manual Road riders: always listed in the Update tab, even before they have any time stored
+const MANUAL_ROAD_RIDERS = ['David','Medellin'];
+const PTS_TABLE = [30,27,24,22,20,18,16,14,12,10,8,7,6,5,4,3,2,1];
+function dp(pts){ return Math.round(pts); }
+const TOTAL_SEGMENTS = 26;
+const AUTO_SYNC_RIDERS = ['Ferrara','Miller','Color','Apo','Diego','Aguirre','Guzman','Gera','Pato','CDP'];
+const STRAVA_NAME_MAP = {
+  'eduardo miller':'Miller','marcelo colorado':'Color','arturo rodriguez':'Apo',
+  'adrián ferrara':'Ferrara','adrian ferrara':'Ferrara','diego aguilar':'Diego',
+  'gerardo rodriguez':'Gera','angel galvan':'Angel','dago':'Dago','dago gonzalez':'Dago',
+  'jp vega':'Vega','mauricio ruiz':'Ruiz','patricio gonzalez':'Pato','adrian guzman':'Guzman',
+  'santiago gonzalez':'Santi','ricardo gonzalez':'Pollo','rodrigo fernández':'Roco',
+  'rodrigo fernandez':'Roco','juan pablo aguirre':'Aguirre','david villarreal':'David',
+  'rodrigo rubio':'CDP','andres medellin':'Medellin','andrés medellín':'Medellin',
+  'andrés medellin':'Medellin','andres medellín':'Medellin'
+};
+const RIDER_COLORS = {
+  Miller:'#E8540A',Color:'#F5C842',Ferrara:'#5DADE2',Diego:'#2ECC71',Gera:'#9B59B6',
+  Apo:'#E74C3C',Angel:'#1ABC9C',Dago:'#F39C12',Vega:'#3498DB',Pato:'#E67E22',
+  Guzman:'#27AE60',Pollo:'#8E44AD',Santi:'#16A085',Ruiz:'#D35400',Roco:'#2980B9',
+  CDP:'#7F8C8D',Melesio:'#BDC3C7',Aguirre:'#C0392B',David:'#D63384',Medellin:'#0097A7',
+};
+const SEED_HISTORY = [];
+let SEGMENT_TIMES = {};
+SEGMENTS.forEach(s=>SEGMENT_TIMES[s.name]={});
+let MTB_SEGMENT_TIMES = {};
+MTB_SEGMENTS.forEach(s=>MTB_SEGMENT_TIMES[s.name]={});
+// ─── ROAD / MTB MODE ─────────────────────────────────────────────────────────
+const TIER_ORDER = { road:['King','1','2','3','4'], mtb:['1','2','3'] };
+const TIER_LABELS = { King:'👑 King', 1:'Tier 1', 2:'Tier 2', 3:'Tier 3', 4:'Tier 4' };
+const ROAD_TIERS = [
+  {tier:'King',mult:'×1.1',desc:'The main climb — Olinalá',col:'var(--gold)'},
+  {tier:'1',mult:'×1.0',desc:'Premier segments',col:'var(--orange-l)'},
+  {tier:'2',mult:'×0.9',desc:'Secondary climbs',col:'#5DADE2'},
+  {tier:'3',mult:'×0.8',desc:'Tertiary segments',col:'#2ECC71'},
+  {tier:'4',mult:'×0.7',desc:'Bonus segments',col:'var(--gray)'},
+];
+const MTB_TIERS = [
+  {tier:'1',mult:'×1.0',desc:'Top MTB segments',col:'var(--orange-l)'},
+  {tier:'2',mult:'×0.9',desc:'Secondary MTB segments',col:'#5DADE2'},
+  {tier:'3',mult:'×0.8',desc:'Bonus MTB segments',col:'#2ECC71'},
+];
+let CURRENT_MODE = 'road'; // 'road' | 'mtb'
+function activeSegments(){ return CURRENT_MODE==='mtb' ? MTB_SEGMENTS : SEGMENTS; }
+function activeTotalSegments(){ return activeSegments().length; }
+function activeScoresKey(){ return CURRENT_MODE==='mtb' ? 'mtbScores' : 'scores'; }
+function activeTimesKey(){ return CURRENT_MODE==='mtb' ? 'mtbSegmentTimes' : 'segmentTimes'; }
+function activeHistoryKey(){ return CURRENT_MODE==='mtb' ? 'mtbHistory' : 'history'; }
+function activeRosterFilter(){ return CURRENT_MODE==='mtb' ? MTB_RIDERS : null; }
+function activeTimes(){ return CURRENT_MODE==='mtb' ? MTB_SEGMENT_TIMES : SEGMENT_TIMES; }
+function timeToSecs(t){
+  if(!t) return 0;
+  const parts = t.split(':').map(Number);
+  if(parts.length === 3) return parts[0]*3600 + parts[1]*60 + parts[2];
+  return parts[0]*60 + parts[1];
+}
+function fmtGap(secs){
+  if(secs === 0) return '—';
+  const m = Math.floor(secs/60);
+  const s = secs % 60;
+  return `+${m}:${String(s).padStart(2,'0')}`;
+}
+let CFG={binId:'',masterKey:'',adminPw:''};
+let DATA={scores:{},history:[]};
+let IS_ADMIN=false;
+function loadCfg(){try{CFG=JSON.parse(localStorage.getItem('dcc_cfg')||'{}');}catch(e){}CFG.binId=CFG.binId||'';CFG.masterKey=CFG.masterKey||'';CFG.adminPw=CFG.adminPw||'';}
+function saveCfg(){localStorage.setItem('dcc_cfg',JSON.stringify(CFG));}
+const BIN_BASE='https://api.jsonbin.io/v3';
+async function readBin(onStatus){
+  const attemptOnce=async(attempt)=>{
+    if(onStatus) onStatus(`Cargando… intento ${attempt} de 3`);
+    const controller=new AbortController();
+    const timeoutId=setTimeout(()=>controller.abort(),8000);
+    try{
+      const r=await fetch(`${BIN_BASE}/b/${CFG.binId}/latest`,{signal:controller.signal});
+      if(!r.ok)throw new Error(`Read error: ${r.status}`);
+      return (await r.json()).record;
+    }finally{
+      clearTimeout(timeoutId);
+    }
+  };
+  let lastErr;
+  for(let i=0;i<3;i++){
+    try{ return await attemptOnce(i+1); }
+    catch(e){
+      lastErr=e;
+      console.error(`[DCC] intento ${i+1} falló:`, e.name, e.message);
+      if(i<2) await new Promise(res=>setTimeout(res,1000*(i+1)));
+    }
+  }
+  throw lastErr;
+}
+async function writeBin(d){
+  const r=await fetch(`${BIN_BASE}/b/${CFG.binId}`,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':CFG.masterKey},body:JSON.stringify(d)});
+  if(!r.ok)throw new Error(`Write error: ${r.status}`);
+}
+async function fetchAndRender(){
+  const setLoading=msg=>{
+    const el=document.getElementById('standingsEl');
+    if(el && el.querySelector('.empty')) el.innerHTML=`<div class="empty"><span class="spinner"></span> ${msg}</div>`;
+  };
+  try{
+    DATA=await readBin(setLoading);
+    if(!DATA.history) DATA.history=[];
+    if(!DATA.mtbHistory) DATA.mtbHistory=[];
+    if(!DATA.scores) DATA.scores={};
+    if(!DATA.mtbScores) DATA.mtbScores={};
+    if(DATA.segmentTimes) SEGMENT_TIMES=DATA.segmentTimes;
+    if(DATA.mtbSegmentTimes) MTB_SEGMENT_TIMES=DATA.mtbSegmentTimes;
+    const lastSync=DATA.lastSync?new Date(DATA.lastSync).toLocaleString('en-US',{timeZone:'America/Monterrey',month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'}):'';
+    document.getElementById('lastUpd').textContent=lastSync?'Updated: '+lastSync:'Season loaded ✓';
+    renderAll();
+   }catch(e){
+    console.error('[DCC] fetchAndRender falló:', e.name, e.message);
+    const detail=`${e.name}: ${e.message}`;
+    const msg=e.name==='AbortError'?'Se tardó demasiado en responder. Revisa tu conexión.':detail;
+    document.getElementById('standingsEl').innerHTML=`<div class="empty"><h3>No se pudo cargar</h3><p>${msg}</p><p style="font-size:10px;color:var(--gl);margin-top:4px;">${new Date().toLocaleTimeString()}</p><button onclick="fetchAndRender()" style="margin-top:10px;padding:8px 16px;border-radius:8px;border:none;background:var(--orange);color:#000;font-weight:600;cursor:pointer;">Reintentar</button></div>`;
+  }
+}
+function activeSegNames(){ return new Set(activeSegments().map(s=>s.name)); }
+function calcTotals(){
+  const scores=DATA[activeScoresKey()]||{};
+  const roster=activeRosterFilter();
+  const valid=activeSegNames();
+  const t={};
+  for(const r in scores){
+    if(roster && !roster.includes(r)) continue;
+    let p=0;for(const s in scores[r])if(valid.has(s))p+=scores[r][s]||0;
+    t[r]=Math.round(p*10)/10;
+  }
+  return t;
+}
+function getRanked(){return Object.entries(calcTotals()).sort((a,b)=>b[1]-a[1]).map(([name,pts],i)=>({name,pts,rank:i+1}));}
+function getSegCount(r){const scores=DATA[activeScoresKey()]||{};const valid=activeSegNames();return Object.entries(scores[r]||{}).filter(([s,v])=>valid.has(s)&&v>0).length;}
+function renderAll(){renderBarChart();renderStandings();renderProfileSelect();renderCompareSelects();}
+function renderBarChart(){
+  const ranked=getRanked();
+  if(!ranked.length){document.getElementById('barChart').innerHTML='';return;}
+  const max=ranked[0].pts;
+  document.getElementById('barChart').innerHTML=ranked.map((r,i)=>{
+    const col=RIDER_COLORS[r.name]||'#888';
+    const pct=Math.max((r.pts/max)*100,1);
+    const medal=i===0?'👑':i===1?'🥈':i===2?'🥉':'';
+    return `<div class="bar-row">
+      <div class="bar-name" style="color:${col};">${medal} ${r.name}</div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:${pct}%;background:${col}33;border-left:3px solid ${col};"></div>
+      </div>
+      <div class="bar-pts" style="color:${col};">${dp(r.pts)} pts</div>
+    </div>`;
+  }).join('');
+}
+function getPrevRanks(){
+  let prevRanks={},prevPts={};
+  const hist=DATA[activeHistoryKey()];
+  if(hist?.length){
+    const last=hist[0];
+    (last.before||[]).forEach((r,i)=>{prevRanks[r.name]=i+1;prevPts[r.name]=r.pts;});
+  }
+  return {prevRanks,prevPts};
+}
+function renderStandings(){
+  const ranked=getRanked();
+  const scores=DATA[activeScoresKey()]||{};
+  const hist=DATA[activeHistoryKey()]||[];
+  const totalSegs=activeTotalSegments();
+  const sb=document.getElementById('sumBar');
+  const el=document.getElementById('standingsEl');
+  const activeSegs=new Set();
+  const validSegs=activeSegNames();
+  for(const r in scores)for(const s in scores[r])if(validSegs.has(s)&&scores[r][s]>0)activeSegs.add(s);
+  sb.innerHTML=`
+    <div class="sum-card"><div class="sum-val">${ranked.length}</div><div class="sum-lbl">Riders</div></div>
+    <div class="sum-card"><div class="sum-val">${activeSegs.size}<span style="font-size:1rem;color:var(--gray)">/${totalSegs}</span></div><div class="sum-lbl">Segments</div></div>
+    <div class="sum-card"><div class="sum-val">${ranked[0]?dp(ranked[0].pts):0}</div><div class="sum-lbl">Leader pts</div></div>
+    <div class="sum-card"><div class="sum-val">${hist.length||0}</div><div class="sum-lbl">Updates</div></div>
+  `;
+  const {prevRanks,prevPts}=getPrevRanks();
+  el.innerHTML=ranked.map((r,i)=>{
+    const cls=i===0?'top1':i===1?'top2':i===2?'top3':'';
+    const col=RIDER_COLORS[r.name]||'#888';
+    const cnt=getSegCount(r.name);
+    const isAuto=AUTO_SYNC_RIDERS.includes(r.name);
+    const dotCls=isAuto?'sync-auto':'sync-manual';
+    const dotTitle=isAuto?'Auto-syncs from Strava':'Manual updates';
+    const chips=Object.entries(scores[r.name]||{}).filter(([s,p])=>validSegs.has(s)&&p>0).sort((a,b)=>b[1]-a[1])
+      .map(([seg,pts])=>`<div class="chip"><span class="chip-seg">${seg}</span><span class="chip-pts">${dp(pts)}</span></div>`).join('');
+    let chgPts='',chgPos='',chgCls='neu';
+    if(prevPts[r.name]!==undefined){const d=Math.round((r.pts-prevPts[r.name])*10)/10;chgPts=d>0?`+${dp(d)}`:d<0?`${dp(d)}`:`±0`;chgCls=d>0?'up':d<0?'dn':'neu';}
+    if(prevRanks[r.name]!==undefined){const pd=prevRanks[r.name]-r.rank;chgPos=pd>0?`↑${pd}`:pd<0?`↓${Math.abs(pd)}`:`—`;}
+    return `
+      <div class="r-row ${cls}" onclick="toggleBD('bd_${r.name}')">
+        <div class="rank-n">${r.rank}</div>
+        <div class="r-info">
+          <div class="avatar" style="background:${col}22;color:${col};">${r.name.slice(0,2).toUpperCase()}</div>
+          <div><div class="r-name"><span class="sync-dot ${dotCls}" title="${dotTitle}"></span>${r.name}</div><div class="r-sub">${cnt} / ${totalSegs} segments</div></div>
+        </div>
+        <div class="pts-col"><div class="pts-big">${dp(r.pts)}</div><div class="pts-lbl">points</div></div>
+        <div class="change-col">
+          ${chgPts?`<div class="chg-pts ${chgCls}">${chgPts} pts</div>`:''}
+          ${chgPos?`<div class="chg-pos ${chgCls}">${chgPos} pos</div>`:''}
+        </div>
+        <div class="medal-col">${i===0?'👑':i===1?'🥈':i===2?'🥉':''}</div>
+      </div>
+      <div class="breakdown" id="bd_${r.name}">
+        <div class="bd-title">Breakdown — ${r.name}</div>
+        <div class="chips">${chips||'<span style="color:var(--gray);font-size:11px;">No segments scored</span>'}</div>
+      </div>`;
+  }).join('');
+}
+function toggleBD(id){document.getElementById(id)?.classList.toggle('open');}
+let activeSegName = null;
+function renderSegments(){
+  const panel=document.getElementById('segLbPanel');
+  panel.classList.remove('open');
+  activeSegName=null;
+  const segs=activeSegments();
+  const scores=DATA[activeScoresKey()]||{};
+  const tierOrder=TIER_ORDER[CURRENT_MODE];
+  // Group by zone first (ZONE_ORDER per mode), then by tier inside each zone.
+  // Segments without a loc fall into an 'Otros' group at the end.
+  const zones=[...new Set(ZONE_ORDER[CURRENT_MODE].concat(segs.map(s=>s.loc||'Otros')))];
+  let html='';
+  zones.forEach(zone=>{
+  const zoneSegs=segs.map((s,si)=>({s,si})).filter(({s})=>(s.loc||'Otros')===zone);
+  if(!zoneSegs.length) return;
+  html+=`<div class="zone-header"><h2>${zone}</h2><span>${zoneSegs.length} segmento${zoneSegs.length!==1?'s':''}</span></div>`;
+  const grouped={};
+  tierOrder.forEach(t=>grouped[t]=[]);
+  zoneSegs.forEach(x=>grouped[x.s.tier]&&grouped[x.s.tier].push(x));
+  tierOrder.forEach(tier=>{
+    if(!grouped[tier]||!grouped[tier].length) return;
+    html+=`<div class="tier-divider"><span>${TIER_LABELS[tier]||'Tier '+tier}</span></div>`;
+    grouped[tier].forEach(({s,si})=>{
+      let leader='',lpts=0;
+      for(const r in scores){const p=scores[r][s.name]||0;if(p>lpts){lpts=p;leader=r;}}
+      const hasData=lpts>0;
+      html+=`<div class="seg-card" id="sc_${si}" onclick="openSegLb(${si})">
+        <div class="seg-card-name">${s.name}${s.strava?`<a class="strava-link" href="${s.strava}" target="_blank" onclick="event.stopPropagation()" title="View on Strava"><svg viewBox="0 0 24 24" fill="#FC4C02" xmlns="http://www.w3.org/2000/svg"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg></a>`:''}</div>
+        <div class="seg-meta">
+          <span class="tier-pill t${s.tier}">${s.tier==='King'?'👑 King':'Tier '+s.tier}</span>
+          <span class="wval">×${s.weight}</span>
+          ${s.type?`<span class="wval">· ${s.type}</span>`:''}
+          ${s.loc?`<span class="wval">· ${s.loc}</span>`:''}
+        </div>
+        ${hasData?`<div class="seg-leader">Leader: <strong style="color:var(--white);">${leader}</strong> · ${dp(lpts)} pts</div>`:'<div class="seg-leader">No data yet</div>'}
+        <div class="seg-click-hint">Click to see leaderboard ↗</div>
+      </div>`;
+    });
+  });
+  });
+  document.getElementById('segGrid').innerHTML=html;
+}
+function openSegLb(segIdx){
+  const segs=activeSegments();
+  const seg = segs[segIdx];
+  if(!seg) return;
+  const segName = seg.name;
+  if(activeSegName===segName){closeSegLb();return;}
+  if(activeSegName){
+    const prevIdx = segs.findIndex(s=>s.name===activeSegName);
+    const prev=document.getElementById('sc_'+prevIdx);
+    if(prev)prev.classList.remove('active-seg');
+  }
+  activeSegName=segName;
+  const card=document.getElementById('sc_'+segIdx);
+  if(card)card.classList.add('active-seg');
+  const scores=DATA[activeScoresKey()]||{};
+  const entries=[];
+  for(const rider in scores){
+    const pts=scores[rider][segName]||0;
+    if(pts>0) entries.push({rider,pts});
+  }
+  entries.sort((a,b)=>b.pts-a.pts);
+  const tierLabel=seg.tier==='King'?'👑 King Segment':'Tier '+seg.tier;
+  const stravaUrl=seg.strava||'';
+  document.getElementById('segLbTitle').innerHTML=segName+(stravaUrl?` <a href="${stravaUrl}" target="_blank" style="display:inline-flex;align-items:center;vertical-align:middle;margin-left:8px;opacity:0.8;" title="View on Strava"><svg viewBox="0 0 24 24" width="20" height="20" fill="#FC4C02" xmlns="http://www.w3.org/2000/svg"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg></a>`:'');
+  document.getElementById('segLbMeta').textContent=`${tierLabel} · ×${seg.weight} weight · ${entries.length} rider${entries.length!==1?'s':''} scored`;
+  const segTimes = activeTimes()[segName] || {};
+  const leaderTime = entries.length ? segTimes[entries[0].rider] : null;
+  const leaderSecs = leaderTime ? timeToSecs(leaderTime) : 0;
+  if(entries.length===0){
+    document.getElementById('segLbRows').innerHTML='<div class="no-data-row">No results recorded yet for this segment</div>';
+  } else {
+    let rank=1;
+    document.getElementById('segLbRows').innerHTML=`
+      <div style="display:grid;grid-template-columns:28px 1fr 58px 58px 44px;gap:6px;padding:4px 10px;margin-bottom:4px;">
+        <div style="font-size:10px;color:var(--gl);text-align:center;">#</div>
+        <div style="font-size:10px;color:var(--gl);">RIDER</div>
+        <div style="font-size:10px;color:var(--gl);text-align:right;">TIME</div>
+        <div style="font-size:10px;color:var(--gl);text-align:right;">GAP</div>
+        <div style="font-size:10px;color:var(--gl);text-align:right;">PTS</div>
+      </div>`+
+    entries.map((e,i)=>{
+      if(i>0 && entries[i].pts < entries[i-1].pts) rank=i+1;
+      const col=RIDER_COLORS[e.rider]||'#888';
+      const cls=rank===1?'slb-1':rank===2?'slb-2':rank===3?'slb-3':'';
+      const medal=rank===1?'👑':rank===2?'🥈':rank===3?'🥉':'';
+      const t=segTimes[e.rider]||'';
+      const gap = t&&leaderSecs ? fmtGap(timeToSecs(t)-leaderSecs) : '—';
+      const gapCol = gap==='—'?'var(--gl)':'var(--red)';
+      return `<div class="seg-lb-row ${cls}" style="grid-template-columns:28px 1fr 58px 58px 44px;">
+        <div class="slb-rank">${rank}</div>
+        <div class="slb-rider">
+          <div style="width:22px;height:22px;border-radius:50%;background:${col}33;color:${col};font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${e.rider.slice(0,2).toUpperCase()}</div>
+          <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${medal?medal+' ':''}${e.rider}</span>
+        </div>
+        <div style="text-align:right;font-size:11px;font-weight:600;color:var(--white);">${t||'—'}</div>
+        <div style="text-align:right;font-size:11px;color:${gapCol};">${gap}</div>
+        <div class="slb-pts" style="color:${col};font-size:1rem;">${dp(e.pts)}</div>
+      </div>`;
+    }).join('');
+  }
+  const panel=document.getElementById('segLbPanel');
+  panel.classList.add('open');
+  panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function closeSegLb(){
+  if(activeSegName){
+    const prevIdx = activeSegments().findIndex(s=>s.name===activeSegName);
+    const card=document.getElementById('sc_'+prevIdx);
+    if(card)card.classList.remove('active-seg');
+  }
+  activeSegName=null;
+  document.getElementById('segLbPanel').classList.remove('open');
+}
+function renderProfileSelect(){
+  const sel=document.getElementById('riderProfileSel');
+  const cur=sel.value;
+  const ranked=getRanked();
+  sel.innerHTML='<option value="">— Select your rider —</option>'+ranked.map(r=>`<option value="${r.name}">${r.name} (#${r.rank} · ${dp(r.pts)} pts)</option>`).join('');
+  if(cur)sel.value=cur;
+}
+function renderProfile(){
+  const name=document.getElementById('riderProfileSel').value;
+  const el=document.getElementById('profileContent');
+  if(!name){el.innerHTML='';return;}
+  const ranked=getRanked();
+  const me=ranked.find(r=>r.name===name);
+  if(!me){el.innerHTML='';return;}
+  const col=RIDER_COLORS[name]||'#888';
+  const scores=(DATA[activeScoresKey()]||{})[name]||{};
+  const cnt=getSegCount(name);
+  const totalSegs=activeTotalSegments();
+  const leader=ranked[0];
+  const gapToLeader=Math.round((leader.pts-me.pts)*10)/10;
+  const prevRider=ranked[me.rank-2];
+  const gapToAbove=prevRider?Math.round((prevRider.pts-me.pts)*10)/10:0;
+  el.innerHTML=`
+    <div class="profile-header">
+      <div class="profile-avatar" style="background:${col}22;color:${col};">${name.slice(0,2).toUpperCase()}</div>
+      <div style="flex:1;">
+        <div class="profile-name">${name}</div>
+        <div class="profile-rank">#${me.rank} overall · ${me.pts} pts · ${AUTO_SYNC_RIDERS.includes(name)?'<span style="color:var(--green);">●auto-sync</span>':'<span style="color:var(--gray);">○manual</span>'}</div>
+      </div>
+      <div class="profile-stats">
+        <div class="pstat"><div class="pstat-val" style="color:${col};">${me.pts}</div><div class="pstat-lbl">Total pts</div></div>
+        <div class="pstat"><div class="pstat-val">${cnt}<span style="font-size:1rem;color:var(--gray)">/${totalSegs}</span></div><div class="pstat-lbl">Segments</div></div>
+        <div class="pstat"><div class="pstat-val ${gapToLeader>0?'dn':''}">${me.rank===1?'👑':'-'+gapToLeader}</div><div class="pstat-lbl">${me.rank===1?'Leader':'Gap to #1'}</div></div>
+      </div>
+    </div>
+    ${me.rank>1
+      ?`<div style="background:var(--d2);border:1px solid var(--d4);border-radius:8px;padding:.9rem 1.25rem;margin-bottom:1rem;font-size:13px;color:var(--gray);">
+          <span style="color:var(--white);font-weight:600;">${gapToAbove} pts</span> behind
+          <span style="color:${RIDER_COLORS[prevRider.name]||'#888'};font-weight:600;">${prevRider.name}</span> (#${me.rank-1})
+        </div>`
+      :`<div style="background:rgba(245,200,66,.08);border:1px solid rgba(245,200,66,.3);border-radius:8px;padding:.9rem 1.25rem;margin-bottom:1rem;font-size:13px;color:var(--gold);font-weight:600;">👑 You are leading the 2026 season!</div>`
+    }
+    <div style="background:var(--d2);border:1px solid var(--d4);border-radius:10px;overflow:hidden;">
+      <table class="seg-table">
+        <thead><tr><th>Segment</th><th>Pos</th><th>My Time</th><th>Time Gap</th></tr></thead>
+        <tbody>
+          ${(()=>{
+            const segs=activeSegments();
+            const scoresAll=DATA[activeScoresKey()]||{};
+            const times=activeTimes();
+            const tierOrder=TIER_ORDER[CURRENT_MODE];
+            const grouped={};
+            tierOrder.forEach(t=>grouped[t]=[]);
+            segs.forEach(seg=>grouped[seg.tier]&&grouped[seg.tier].push(seg));
+            let rows='';
+            tierOrder.forEach(tier=>{
+              if(!grouped[tier]||!grouped[tier].length) return;
+              const tierLabel=tier==='King'?'👑 King':'Tier '+tier;
+              rows+=`<tr><td colspan="4" style="background:var(--d3);color:var(--orange);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:6px 12px;">${tierLabel}</td></tr>`;
+              grouped[tier].forEach(seg=>{
+                const myPts=scores[seg.name]||0;
+                const has=myPts>0;
+                const segEntries=Object.entries(scoresAll).filter(([,s])=>(s[seg.name]||0)>0).sort((a,b)=>(b[1][seg.name]||0)-(a[1][seg.name]||0));
+                let myPos='—';
+                if(has){
+                  let rank=1;
+                  for(let i=0;i<segEntries.length;i++){
+                    if(i>0&&(segEntries[i][1][seg.name]||0)<(segEntries[i-1][1][seg.name]||0)) rank=i+1;
+                    if(segEntries[i][0]===name){myPos=rank;break;}
+                  }
+                }
+                const segTimes=times[seg.name]||{};
+                const myTime=segTimes[name]||'';
+                const leaderRider=segEntries.length?segEntries[0][0]:'';
+                const leaderTime=segTimes[leaderRider]||'';
+                const timegapSecs=(myTime&&leaderTime)?timeToSecs(myTime)-timeToSecs(leaderTime):null;
+                const timegapStr=timegapSecs===null?'—':timegapSecs===0?'=':fmtGap(timegapSecs);
+                const posOrd=myPos==='—'?'—':myPos===1?'1st':myPos===2?'2nd':myPos===3?'3rd':myPos+'th';
+                const posCl=myPos===1?'up':myPos==='—'?'neu':'';
+                const tierTag=seg.tier==='King'?'👑':'T'+seg.tier;
+                rows+=`<tr>
+                  <td style="font-weight:${has?600:400};color:${has?'var(--white)':'var(--gray)'};">${seg.name} <span style="font-size:10px;opacity:.6;">${tierTag}</span></td>
+                  <td class="${posCl}" style="font-weight:600;">${posOrd}</td>
+                  <td style="font-size:12px;color:var(--white);">${myTime||'—'}</td>
+                  <td style="font-size:12px;color:${timegapSecs===0?'var(--green)':timegapSecs===null?'var(--gl)':'var(--red)'};">${timegapStr}</td>
+                </tr>`;
+              });
+            });
+            return rows;
+          })()}
+        </tbody>
+      </table>
+    </div>`;
+}
+// ─── COMPARE (head-to-head) ──────────────────────────────────────────────────
+function renderCompareSelects(){
+  const ranked=getRanked();
+  ['cmpA','cmpB'].forEach(id=>{
+    const sel=document.getElementById(id);
+    const cur=sel.value;
+    sel.innerHTML=`<option value="">— ${id==='cmpA'?'Rider A':'Rider B'} —</option>`+ranked.map(r=>`<option value="${r.name}">${r.name} (#${r.rank})</option>`).join('');
+    if(cur)sel.value=cur;
+  });
+}
+function renderCompare(){
+  const a=document.getElementById('cmpA').value;
+  const b=document.getElementById('cmpB').value;
+  const el=document.getElementById('compareContent');
+  if(!a||!b){el.innerHTML='<div class="empty"><p>Pick two riders to compare.</p></div>';return;}
+  if(a===b){el.innerHTML='<div class="empty"><p>Pick two different riders.</p></div>';return;}
+  const ranked=getRanked();
+  const ra=ranked.find(r=>r.name===a),rb=ranked.find(r=>r.name===b);
+  const colA=RIDER_COLORS[a]||'#888',colB=RIDER_COLORS[b]||'#888';
+  const segs=activeSegments();
+  const times=activeTimes();
+  const scores=DATA[activeScoresKey()]||{};
+  let aWins=0,bWins=0;
+  const rows=segs.map(seg=>{
+    const ta=times[seg.name]?.[a]||'';
+    const tb=times[seg.name]?.[b]||'';
+    const pa=scores[a]?.[seg.name]||0;
+    const pb=scores[b]?.[seg.name]||0;
+    let winner='';
+    if(ta&&tb){ if(timeToSecs(ta)<timeToSecs(tb)){winner='a';aWins++;} else if(timeToSecs(tb)<timeToSecs(ta)){winner='b';bWins++;} }
+    else if(ta&&!tb){winner='a';aWins++;}
+    else if(tb&&!ta){winner='b';bWins++;}
+    if(!ta&&!tb) return '';
+    return `<tr>
+      <td style="font-size:12px;color:var(--gray);">${seg.name}</td>
+      <td style="text-align:center;font-size:12px;font-weight:${winner==='a'?700:400};color:${winner==='a'?colA:'var(--white)'};">${ta||'—'}<div style="font-size:9px;color:var(--gray);">${dp(pa)}p</div></td>
+      <td style="text-align:center;font-size:11px;color:var(--gl);">vs</td>
+      <td style="text-align:center;font-size:12px;font-weight:${winner==='b'?700:400};color:${winner==='b'?colB:'var(--white)'};">${tb||'—'}<div style="font-size:9px;color:var(--gray);">${dp(pb)}p</div></td>
+    </tr>`;
+  }).filter(Boolean).join('');
+  el.innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;margin-bottom:1rem;">
+      <div style="text-align:center;"><div class="profile-avatar" style="background:${colA}22;color:${colA};margin:0 auto 6px;">${a.slice(0,2).toUpperCase()}</div><div style="font-weight:700;color:${colA};">${a}</div><div style="font-size:12px;color:var(--gray);">#${ra.rank} · ${dp(ra.pts)} pts</div></div>
+      <div style="text-align:center;"><div style="font-family:'Bebas Neue';font-size:2rem;color:var(--white);">${aWins}–${bWins}</div><div style="font-size:9px;color:var(--gray);text-transform:uppercase;letter-spacing:.1em;">segment wins</div></div>
+      <div style="text-align:center;"><div class="profile-avatar" style="background:${colB}22;color:${colB};margin:0 auto 6px;">${b.slice(0,2).toUpperCase()}</div><div style="font-weight:700;color:${colB};">${b}</div><div style="font-size:12px;color:var(--gray);">#${rb.rank} · ${dp(rb.pts)} pts</div></div>
+    </div>
+    <div style="background:var(--d2);border:1px solid var(--d4);border-radius:10px;overflow:hidden;">
+      <table class="seg-table"><thead><tr><th>Segment</th><th style="text-align:center;">${a}</th><th></th><th style="text-align:center;">${b}</th></tr></thead><tbody>${rows||'<tr><td colspan="4" style="text-align:center;color:var(--gl);">No shared segment data</td></tr>'}</tbody></table>
+    </div>`;
+}
+function renderHistory(){
+  const el=document.getElementById('histList');
+  const hist=DATA[activeHistoryKey()]||[];
+  const segs=activeSegments();
+  if(!hist.length){el.innerHTML=`<div class="empty"><h3>No updates yet</h3></div>`;return;}
+  el.innerHTML=hist.map((h)=>{
+    const seg=segs.find(s=>s.name===h.segment);
+    const tierLabel=seg?(seg.tier==='King'?'👑 King':'Tier '+seg.tier):'';
+    const tierCl=seg?`t${seg.tier}`:'';
+    const sorted=[...(h.changes||[])].sort((a,b)=>Math.abs(b.d)-Math.abs(a.d));
+    const bigWinner=sorted.find(c=>c.d>0);
+    const bigLoser=sorted.find(c=>c.d<0);
+    const podium=(h.results||[]).slice(0,3);
+    const chips=(h.changes||[]).map(c=>{
+      const col=RIDER_COLORS[c.name]||'#888';
+      const cl=c.d>0?'up':c.d<0?'dn':'neu';
+      return `<div class="hc" style="border-left:2px solid ${col}33;">
+        <span style="color:${col};font-weight:600;">${c.name}</span>
+        <span class="${cl}" style="margin-left:4px;">${c.d>0?'+':''}${dp(c.d)}</span>
+      </div>`;
+    }).join('');
+    let headline='';
+    if(bigWinner && bigLoser){
+      headline=`<span style="color:var(--green);">⬆ ${bigWinner.name} +${dp(bigWinner.d)} pts</span> &nbsp;·&nbsp; <span style="color:var(--red);">⬇ ${bigLoser.name} ${dp(bigLoser.d)} pts</span>`;
+    } else if(bigWinner){
+      headline=`<span style="color:var(--green);">⬆ ${bigWinner.name} gains +${dp(bigWinner.d)} pts</span>`;
+    }
+    return `<div class="hist-entry">
+      <div class="hist-hdr">
+        <div>
+          <div class="hist-seg">${h.segment} &nbsp;<span class="tier-pill ${tierCl}" style="vertical-align:middle;">${tierLabel}</span></div>
+          ${headline?`<div style="font-size:12px;margin-top:4px;">${headline}</div>`:''}
+        </div>
+        <div class="hist-date">${h.date}</div>
+      </div>
+      ${podium.length?`<div style="font-size:12px;color:var(--gray);margin:8px 0 6px;">🥇 ${podium[0]||''}${podium[1]?' &nbsp;🥈 '+podium[1]:''}${podium[2]?' &nbsp;🥉 '+podium[2]:''}</div>`:''}
+      <div class="hist-changes">${chips}</div>
+    </div>`;
+  }).join('');
+}
+function renderRules(){
+  const ord=['st','nd','rd'];
+  document.getElementById('ptsTableBody').innerHTML=PTS_TABLE.map((p,i)=>`<tr><td class="pos">${i+1}${ord[i]||'th'}</td><td class="pts">${p} pts</td></tr>`).join('');
+  const tiers=CURRENT_MODE==='mtb'?MTB_TIERS:ROAD_TIERS;
+  const segs=activeSegments();
+  document.getElementById('tierRules').innerHTML=tiers.map(t=>`
+    <div class="tier-row">
+      <div class="tier-info">
+        <span class="tier-pill t${t.tier}">${t.tier==='King'?'👑 King':'Tier '+t.tier}</span>
+        <div class="tier-desc">${t.desc}</div>
+        <div class="tier-segs">${segs.filter(s=>s.tier===t.tier).map(s=>s.name).join(' · ')}</div>
+      </div>
+      <div class="tier-mult" style="color:${t.col};">${t.mult}</div>
+    </div>`).join('');
+}
+// ─── UPDATE TAB (new simplified logic) ───────────────────────────────────────
+function recalcSegment(segName){
+  const seg=activeSegments().find(s=>s.name===segName);
+  if(!seg) return;
+  const scoresKey=activeScoresKey();
+  if(!DATA[scoresKey]) DATA[scoresKey]={};
+  const times=activeTimes()[segName]||{};
+  const entries=Object.entries(times).map(([rider,time])=>({rider,secs:timeToSecs(time)})).filter(e=>e.secs>0).sort((a,b)=>a.secs-b.secs);
+  for(const rider in DATA[scoresKey]){ if(DATA[scoresKey][rider]) DATA[scoresKey][rider][segName]=0; }
+  let rank=1;
+  entries.forEach((e,i)=>{
+    if(i>0 && e.secs>entries[i-1].secs) rank=i+1;
+    const pts=Math.round((PTS_TABLE[rank-1]||1)*seg.weight*10)/10;
+    if(!DATA[scoresKey][e.rider]) DATA[scoresKey][e.rider]={};
+    DATA[scoresKey][e.rider][segName]=pts;
+  });
+}
+function buildSegSelect(){
+  document.getElementById('segSel').innerHTML=activeSegments().map((s,i)=>`<option value="${i}">${s.name} (${s.tier==='King'?'👑 King':'Tier '+s.tier} · ×${s.weight})</option>`).join('');
+  buildRiderEntry();
+}
+function buildRiderEntry(){
+  const segs=activeSegments();
+  const segIdx=parseInt(document.getElementById('segSel').value);
+  const seg=segs[segIdx];
+  if(!seg) return;
+  const segTimes=activeTimes()[seg.name]||{};
+  const roster=activeRosterFilter();
+  const riders=roster?roster.slice().sort():[...new Set([...Object.keys(DATA[activeScoresKey()]||{}),...MANUAL_ROAD_RIDERS])].sort();
+  document.getElementById('riderEntry').innerHTML=riders.map(r=>{
+    const col=RIDER_COLORS[r]||'#888';
+    const curTime=segTimes[r]||'';
+    const isAuto=AUTO_SYNC_RIDERS.includes(r);
+    return `<div class="entry-row" data-rider="${r}">
+      <div class="rank-avatar" style="background:${col}33;color:${col};width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;">${r.slice(0,2).toUpperCase()}</div>
+      <span style="flex:1;font-size:13px;">${r} ${isAuto?'<span style="font-size:9px;color:var(--green);">●</span>':'<span style="font-size:9px;color:var(--gray);">○</span>'}</span>
+      <input type="text" class="entry-time" data-rider="${r}" placeholder="MM:SS" value="${curTime}" style="width:80px;background:var(--d4);border:1px solid var(--d5);color:var(--white);font-size:12px;border-radius:4px;padding:5px 8px;outline:none;text-align:center;margin:0;">
+    </div>`;
+  }).join('');
+}
+function parsePaste(){
+  const raw=document.getElementById('pasteBox').value;
+  if(!raw.trim()){showStatus('parseStatus','err','Paste some Strava text first.');return;}
+  const lines=raw.split('\n').map(l=>l.trim()).filter(l=>l.length);
+  const timeRe=/(\d+:\d{2}(?::\d{2})?)\s*$/;
+  const found={};
+  let currentRider=null;
+  for(const line of lines){
+    const lower=line.toLowerCase();
+    let matchedName=null;
+    for(const [stravaName,disp] of Object.entries(STRAVA_NAME_MAP)){
+      if(lower.includes(stravaName)){ matchedName=disp; break; }
+    }
+    if(matchedName){
+      currentRider=matchedName;
+      const tMatch=line.match(timeRe);
+      if(tMatch && !found[currentRider]){ found[currentRider]=tMatch[1]; currentRider=null; }
+      continue;
+    }
+    const tMatch=line.match(timeRe);
+    if(tMatch && currentRider && !found[currentRider]){
+      found[currentRider]=tMatch[1];
+      currentRider=null;
+    }
+  }
+  const names=Object.keys(found);
+  if(!names.length){showStatus('parseStatus','err','No riders matched. Check the format.');return;}
+  let filled=0;
+  names.forEach(name=>{
+    const input=document.querySelector(`.entry-time[data-rider="${name}"]`);
+    if(input){input.value=found[name];filled++;}
+  });
+  showStatus('parseStatus','ok',`✅ Filled ${filled} riders. Review & save.`);
+}
+function buildPreview(){
+  const segIdx=parseInt(document.getElementById('segSel').value);
+  const seg=activeSegments()[segIdx];
+  const inputs=[...document.querySelectorAll('.entry-time')];
+  const times={};
+  inputs.forEach(inp=>{const t=inp.value.trim();if(t)times[inp.dataset.rider]=t;});
+  if(!Object.keys(times).length){alert('Enter at least one time.');return;}
+  const entries=Object.entries(times).map(([rider,time])=>({rider,secs:timeToSecs(time),time})).filter(e=>e.secs>0).sort((a,b)=>a.secs-b.secs);
+  let rank=1;
+  document.getElementById('previewList').innerHTML=entries.map((e,i)=>{
+    if(i>0 && e.secs>entries[i-1].secs) rank=i+1;
+    const col=RIDER_COLORS[e.rider]||'#888';
+    const pts=Math.round((PTS_TABLE[rank-1]||1)*seg.weight*10)/10;
+    return `<div class="preview-row">
+      <div class="prev-pos">${rank}.</div>
+      <div style="display:flex;align-items:center;gap:7px;flex:1;">
+        <div style="width:20px;height:20px;border-radius:50%;background:${col}33;color:${col};font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center;">${e.rider.slice(0,2).toUpperCase()}</div>
+        ${e.rider} <span style="font-size:11px;color:var(--gray);">${e.time}</span>
+      </div>
+      <div class="prev-pts">${dp(pts)} pts</div>
+    </div>`;
+  }).join('');
+  document.getElementById('previewWrap').style.display='block';
+}
+async function saveResults(){
+  const segIdx=parseInt(document.getElementById('segSel').value);
+  const seg=activeSegments()[segIdx];
+  document.getElementById('saveBtn').disabled=true;
+  showStatus('saveStatus','info','<span class="spinner"></span> Saving...');
+  const before=getRanked().map(r=>({name:r.name,pts:r.pts}));
+  const inputs=[...document.querySelectorAll('.entry-time')];
+  const times=activeTimes();
+  if(!times[seg.name]) times[seg.name]={};
+  inputs.forEach(inp=>{const t=inp.value.trim();if(t){times[seg.name][inp.dataset.rider]=t;}});
+  recalcSegment(seg.name);
+  const after=getRanked();
+  const changes=[];
+  before.forEach(b=>{const a=after.find(x=>x.name===b.name);if(a){const d=Math.round((a.pts-b.pts)*10)/10;if(d!==0)changes.push({name:b.name,d});}});
+  after.forEach(a=>{if(!before.find(b=>b.name===a.name)&&a.pts>0)changes.push({name:a.name,d:a.pts});});
+  const segEntries=Object.entries(times[seg.name]).map(([rider,time])=>({rider,secs:timeToSecs(time)})).filter(e=>e.secs>0).sort((a,b)=>a.secs-b.secs);
+  const results=segEntries.map(e=>e.rider);
+  const now=new Date();
+  const entry={date:now.toLocaleString('en-US',{timeZone:'America/Monterrey',month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'}),segment:seg.name,before,results,changes,discipline:CURRENT_MODE};
+  const histKey=activeHistoryKey();
+  if(!DATA[histKey])DATA[histKey]=[];
+  DATA[histKey].unshift(entry);
+  DATA[activeTimesKey()]=times;
+  DATA.lastSync=new Date().toISOString();
+  try{
+    await writeBin(DATA);
+    renderAll();
+    showStatus('saveStatus','ok','✅ Saved! Segment re-ranked and synced.');
+    document.getElementById('pasteBox').value='';
+    document.getElementById('previewWrap').style.display='none';
+    buildRiderEntry();
+  }catch(e){showStatus('saveStatus','err','Error: '+e.message);}
+  document.getElementById('saveBtn').disabled=false;
+}
+async function resetData(){
+  alert('Reset disabled in this version to protect live data. Edit JSONBin directly if needed.');
+}
+function saveCredentials(){
+  const mk=document.getElementById('cfgMasterKey').value.trim();
+  const pw=document.getElementById('cfgAdminPw').value.trim();
+  if(!mk||!pw){showStatus('cfgStatus','err','Fill in both fields.');return;}
+  CFG={binId:PUBLIC_BIN_ID,masterKey:mk,adminPw:pw};
+  saveCfg();
+  showStatus('cfgStatus','ok','✅ Credentials saved! You can now save results.');
+  document.getElementById('cfgMasterKey').value='';
+  document.getElementById('cfgAdminPw').value='';
+}
+function toggleAdmin(){if(IS_ADMIN){lockAdmin();return;}document.getElementById('pwModal').classList.remove('hidden');setTimeout(()=>document.getElementById('pwInput').focus(),100);}
+function checkPassword(){
+  if(document.getElementById('pwInput').value===ADMIN_PW){IS_ADMIN=true;closePwModal();showAdminUI();buildSegSelect();}
+  else{showStatus('pwStatus','err','Wrong password');document.getElementById('pwInput').value='';}
+}
+function closePwModal(){document.getElementById('pwModal').classList.add('hidden');document.getElementById('pwInput').value='';document.getElementById('pwStatus').className='status-bar';}
+function lockAdmin(){IS_ADMIN=false;showAdminUI();if(document.querySelector('.section.active')?.id==='tab-update')switchTab('standings');}
+function showAdminUI(){
+  document.getElementById('adminToggleBtn').textContent=IS_ADMIN?'🔓 Admin':'🔐 Admin';
+  document.getElementById('adminToggleBtn').classList.toggle('active',IS_ADMIN);
+  document.getElementById('readonlyNotice').style.display=IS_ADMIN?'none':'inline-block';
+  document.getElementById('updateTab').style.display=IS_ADMIN?'flex':'none';
+}
+function showStatus(id,type,msg){const el=document.getElementById(id);el.className='status-bar show '+type;el.innerHTML=msg;}
+function switchTab(name){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  document.querySelector(`.tab[data-tab="${name}"]`)?.classList.add('active');
+}
+function renderActiveTab(){
+  const activeSection=document.querySelector('.section.active');
+  if(!activeSection) return;
+  const id=activeSection.id;
+  if(id==='tab-standings'){renderBarChart();renderStandings();}
+  else if(id==='tab-profile'){renderProfileSelect();renderProfile();}
+  else if(id==='tab-compare'){renderCompareSelects();renderCompare();}
+  else if(id==='tab-update'){buildSegSelect();}
+  else if(id==='tab-segments'){renderSegments();}
+  else if(id==='tab-history'){renderHistory();}
+  else if(id==='tab-rules'){renderRules();}
+}
+function setMode(mode){
+  if(mode===CURRENT_MODE) return;
+  CURRENT_MODE=mode;
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));
+  closeSegLb();
+  renderActiveTab();
+  renderProfileSelect();
+  renderCompareSelects();
+}
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click',()=>{
+    const name=t.dataset.tab;
+    if(name==='update'&&!IS_ADMIN){toggleAdmin();return;}
+    switchTab(name);
+    if(name==='segments')renderSegments();
+    if(name==='history')renderHistory();
+    if(name==='rules')renderRules();
+    if(name==='profile')renderProfileSelect();
+    if(name==='compare')renderCompareSelects();
+    if(name==='update')buildSegSelect();
+  });
+});
+const PUBLIC_BIN_ID = '69fd24f0250b1311c31bd7ec';
+// Hardcoded admin credentials so updates work from any device (club use).
+const ADMIN_PW = '012305';
+const MASTER_KEY = '$2a$10$CtbbTDwG/SQHvUzyIw5x7ev0MGdo/GWxUsTNPRktsczijltf2iKmO';
+CFG = { binId: PUBLIC_BIN_ID, masterKey: MASTER_KEY, adminPw: ADMIN_PW };
+buildSegSelect();
+document.getElementById('segSel').addEventListener('change',buildRiderEntry);
+fetchAndRender();
+setInterval(()=>{if(!IS_ADMIN)fetchAndRender();},60000);
+</script>
+</body>
+</html>
