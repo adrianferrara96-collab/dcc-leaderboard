@@ -61,9 +61,13 @@ const MTB_SEGMENTS = [
   { name: "Bebederos a Epazote",                   id: 4648497,  weight: 0.8, tier: "3" },
   { name: "Coatí 3 - Downhill",                     id: 15203760, weight: 1.0, tier: "1" },
   { name: "Coatí 3-2-1 downhill",                   id: 15558003, weight: 0.8, tier: "3" },
-  { name: "DH Moras-San Agustin",                  id: 11287426, weight: 0.8, tier: "3" },
-  { name: "Downhill Z",                            id: 11443815, weight: 1.0, tier: "1" },
+  { name: "DH Moras-San Agustin",                  id: 11287426, weight: 1.0, tier: "1" },
   { name: "koati chile",                           id: 12356845, weight: 1.0, tier: "1" },
+  { name: "DH Abrazo del Oso",                     id: 14471448, weight: 0.9, tier: "2" },
+  { name: "Subida Abrazo del Oso",                 id: 13926607, weight: 0.9, tier: "2" },
+  { name: "Damian",                                id: 4052134,  weight: 0.8, tier: "3" },
+  { name: "Toño 1",                                id: 9432021,  weight: 0.8, tier: "3" },
+  { name: "Toño 2",                                id: 3016781,  weight: 0.8, tier: "3" },
   { name: "Ascenso Rhinos Huasteca",                id: 7795575,  weight: 1.0, tier: "1" },
   { name: "Rinos UP Virgen -> Puerto",              id: 10262658, weight: 0.8, tier: "3" },
   { name: "Descenso Rinos desde la virgen",         id: 9147011,  weight: 1.0, tier: "1" },
@@ -234,6 +238,32 @@ function applyUpdatedSegments(baseScores, updatedSegments, segmentTimes, segment
   }
   return newScores;
 }
+// ─── REBUILD SCORES FOR A WHOLE DISCIPLINE FROM STORED TIMES ─────────────────
+// Keeps scores consistent when segments are removed or re-weighted:
+//  - segments no longer in the list are dropped from every rider's scores
+//  - segments in the list that have stored times are re-scored with the current weight
+//  - segments in the list with no stored times keep whatever score they already had
+function rebuildScores(baseScores, segmentTimes, segmentList) {
+  const validNames = new Set(segmentList.map(s => s.name));
+  const newScores = {};
+  for (const [rider, segs] of Object.entries(baseScores)) {
+    newScores[rider] = {};
+    for (const [segName, pts] of Object.entries(segs || {})) {
+      if (validNames.has(segName)) newScores[rider][segName] = pts;
+    }
+  }
+  for (const seg of segmentList) {
+    const times = segmentTimes[seg.name] || {};
+    if (Object.keys(times).length === 0) continue;
+    for (const rider of Object.keys(newScores)) delete newScores[rider][seg.name];
+    const segScores = calcSegmentScores(seg.name, times, seg.weight);
+    for (const [rider, pts] of Object.entries(segScores)) {
+      if (!newScores[rider]) newScores[rider] = {};
+      newScores[rider][seg.name] = pts;
+    }
+  }
+  return newScores;
+}
 // ─── BUILD A HISTORY ENTRY FOR A DISCIPLINE, IF ANYTHING CHANGED ─────────────
 function buildHistoryEntry(riders, oldScores, newScores, updatedSegments, currentHistory) {
   const changes = [];
@@ -364,25 +394,36 @@ async function main() {
   }
   console.log(`\nRuta segments with new/improved times: ${updatedSegments.size}`);
   console.log(`MTB segments with new/improved times:  ${mtbUpdatedSegments.size}`);
-  if (updatedSegments.size === 0 && mtbUpdatedSegments.size === 0) {
-    console.log('No improvements found in either discipline — skipping write.');
+  // ── Rebuild scores for each discipline from all stored times (current weights,
+  //    removed segments dropped). Identical to before if nothing changed. ──
+  const newScores = rebuildScores(currentScores, segmentTimes, SEGMENTS);
+  const newMtbScores = rebuildScores(currentMtbScores, mtbSegmentTimes, MTB_SEGMENTS);
+  const canon = (sc) => JSON.stringify(Object.keys(sc).sort().map(r =>
+    [r, Object.keys(sc[r] || {}).sort().map(k => [k, sc[r][k]])]));
+  const roadChanged = canon(newScores) !== canon(currentScores);
+  const mtbChanged = canon(newMtbScores) !== canon(currentMtbScores);
+  const segListChanged = (stored, list) => {
+    const a = Object.keys(stored || {}).sort().join('|');
+    const b = list.map(s => s.name).sort().join('|');
+    return a !== b;
+  };
+  const roadListChanged = segListChanged(currentData.segmentTimes, SEGMENTS);
+  const mtbListChanged = segListChanged(currentData.mtbSegmentTimes, MTB_SEGMENTS);
+  if (updatedSegments.size === 0 && mtbUpdatedSegments.size === 0 &&
+      !roadChanged && !mtbChanged && !roadListChanged && !mtbListChanged) {
+    console.log('No improvements or segment changes in either discipline — skipping write.');
     return;
   }
-  // ── Recalculate scores only for updated segments, per discipline ──
-  const newScores = updatedSegments.size > 0
-    ? applyUpdatedSegments(currentScores, updatedSegments, segmentTimes, SEGMENTS)
-    : currentScores;
-  const newMtbScores = mtbUpdatedSegments.size > 0
-    ? applyUpdatedSegments(currentMtbScores, mtbUpdatedSegments, mtbSegmentTimes, MTB_SEGMENTS)
-    : currentMtbScores;
+  // Label used in history when points moved only because of a segment/weight change
+  const labelFor = (set) => set.size > 0 ? set : new Set(['Ajuste de segmentos']);
   // ── Detect point changes + build history entries ──
   console.log('\nRuta point changes:');
-  const newHistory = updatedSegments.size > 0
-    ? buildHistoryEntry(activeRiders, currentScores, newScores, updatedSegments, currentHistory)
+  const newHistory = roadChanged
+    ? buildHistoryEntry(activeRiders, currentScores, newScores, labelFor(updatedSegments), currentHistory)
     : currentHistory;
   console.log('\nMTB point changes:');
-  const newMtbHistory = mtbUpdatedSegments.size > 0
-    ? buildHistoryEntry(activeMtbRiders, currentMtbScores, newMtbScores, mtbUpdatedSegments, currentMtbHistory)
+  const newMtbHistory = mtbChanged
+    ? buildHistoryEntry(activeMtbRiders, currentMtbScores, newMtbScores, labelFor(mtbUpdatedSegments), currentMtbHistory)
     : currentMtbHistory;
   // ── Write to JSONBin — single combined write for both disciplines ──
   const updatedData = {
